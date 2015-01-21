@@ -1,0 +1,4 @@
+name: "HapCol"
+markdown: redcarpet
+highlighter: pygments
+permalink: :title
