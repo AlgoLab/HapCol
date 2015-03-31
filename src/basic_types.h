@@ -44,6 +44,25 @@ typedef unsigned int Counter;
 typedef int Pointer;
 typedef std::bitset<MAX_COVERAGE> BitColumn;
 typedef std::vector<Entry> Column;
+typedef std::vector<Column> Block;
+
+
+struct EntryRead {
+  
+  int position;
+  bool allele;
+  unsigned int phred_score;
+
+  EntryRead(int pos, bool a, unsigned int p) 
+  {
+    position = pos;
+    allele = a;
+    phred_score = p;
+  }
+
+};
+
+typedef std::vector<EntryRead> Fragment;
 
 
 struct options_t {
@@ -52,6 +71,8 @@ struct options_t {
   std::string haplotype_filename;
   bool unweighted;
   bool no_xs;
+  bool all_heterozygous;
+  bool unique;
   double error_rate;
   double alpha;
 
@@ -61,6 +82,8 @@ struct options_t {
     haplotype_filename(""),
     unweighted(true),
     no_xs(true),
+    all_heterozygous(true),
+    unique(true),
     error_rate(0.05),
     alpha(0.01)
   {}

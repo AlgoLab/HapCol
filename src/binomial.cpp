@@ -35,9 +35,9 @@ binom_coeff::initialize_binomial_coefficients(const unsigned int n,
   // binomial coefficients
   btable.clear();
   btable.resize(n+1, std::vector<unsigned int>(n + 1, 0));
-  for (unsigned int i = 1; i <= n; ++i) {
+  for (unsigned int i = 0; i <= n; ++i) {
     for (unsigned int j = 0; j <= i; j++) {
-      if (j == 0 || j == i) {
+      if (i == 0 || j == 0 || j == i) {
         btable[i][j] = 1;
       } else {
         btable[i][j] = btable[i - 1][j - 1] + btable[i - 1][j];
@@ -47,7 +47,7 @@ binom_coeff::initialize_binomial_coefficients(const unsigned int n,
   // cumulative binomial coefficients
   ctable.clear();
   ctable.resize(n+1, std::vector<unsigned int>(n + 1, 0));
-  for (unsigned int i = 1; i <= n; i++) {
+  for (unsigned int i = 0; i <= n; i++) {
     for (unsigned int j = 0; j <= k; j++) {
       for(unsigned int x = 0; x <= j; x++) {
         ctable[i][j] += btable[i][x];

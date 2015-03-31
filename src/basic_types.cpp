@@ -65,6 +65,8 @@ std::ostream& operator<<(std::ostream& out, const options_t& options) {
     << "Haplotype filename: '" << options.haplotype_filename << '\'' << SEP
     << "Discard weights? " << (options.unweighted?"True":"False") << SEP
     << "Mask ambiguous positions? " << (options.no_xs?"False":"True") << SEP
+    << "all-heterozygous assumption?" << (options.all_heterozygous?"True":"False") << SEP
+    << "read input as unique block?" << (options.unique?"True":"False") << SEP
     << "Error rate: " << options.error_rate << SEP
     << "Alpha: " << options.alpha;
   return out;
@@ -83,6 +85,8 @@ options_t parse_arguments(int argc, char** argv) {
     ("haplotypes,o", po::value<std::string>(&ret.haplotype_filename)->required(), "file where the computed haplotypes will be written to")
     ("discard-weights,u", po::bool_switch(&ret.unweighted), "discard weights")
     ("no-ambiguous,x", po::bool_switch(&ret.no_xs), "do not mark ambiguous positions with Xs")
+    ("all-heterozygous,A", po::bool_switch(&ret.all_heterozygous), "all-heterozygous assumption")
+    ("unique,U", po::bool_switch(&ret.unique), "input as unique block")
     ("error-rate,e", po::value<double>(&ret.error_rate)->default_value(ret.error_rate), "read error rate")
     ("alpha,a", po::value<double>(&ret.alpha)->default_value(ret.alpha), "significance (smaller is better)");
 

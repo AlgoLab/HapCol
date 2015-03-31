@@ -17,8 +17,10 @@ find_package(Boost 1.36 COMPONENTS program_options REQUIRED)
 add_executable (hapcol
   entry.h
   entry.cpp
-  columnreader.h
-  columnreader.cpp
+  new_columnreader.h
+  new_columnreader.cpp
+  blockreader.h
+  blockreader.cpp
   combinations.h
   binomial.h
   binomial.cpp
