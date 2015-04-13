@@ -62,6 +62,12 @@ Optional parameters are:
   decrease);
 - `--no-ambiguous` (or `-x`), do not mask ambiguous positions in the output
   haplotypes with a `X`.
+- `--unique` (or `-U`), do not split the input into independent blocks and 
+  consider the input as a unique block (notice that by default the input is 
+  split into independent blocks and, in correspondence to these, brackets 
+  are added to the output).
+- `--all-heterozygous` (or `-A`), for solving the input instance under the 
+  traditional all-heterozygous assumption.
 
 For example, HapCol can be executed on the sample data included with the program
 with the following command (given from the directory `build/`):
