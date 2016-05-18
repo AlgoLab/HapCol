@@ -27,7 +27,7 @@ def file_len(file):
     return i
 
 
-def snpsInRead(alignment_file, annotation_file, file_delimiter):
+def snpsInRead(alignment_file, annotation_file, file_delimiter, skip_first_line):
 
     in_sam = pysam.AlignmentFile(alignment_file, 'rb')
 
@@ -53,7 +53,8 @@ def snpsInRead(alignment_file, annotation_file, file_delimiter):
         ann_file = open(annotation_file)
 
         # skip first line (comment if the file starts with the header)
-        # ann_file.readline()
+        if skip_first_line:
+            ann_file.readline()
 
         # Header info - first line
         header = ann_file.readline().split(file_delimiter)
@@ -145,6 +146,14 @@ def main():
                         dest='output_dir',
                         help='Output (root) directory.',
                         required=True)
+    parser.add_argument('-skip-first-line',
+                        action='store',
+                        dest='skip_first_line',
+                        help='set this flag if the first line IS NOT the header')
+    parser.add_argument('-file-delimiter',
+                        action='store',
+                        dest='file_delim',
+                        help='set the file delimiter for the annotation file. Default: \\t')
     parser.add_argument('-v',
                         help='increase output verbosity',
                         action='count')
@@ -176,12 +185,15 @@ def main():
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    ann_file_delimiter = '\t'
+    if args.file_delim is None:
+        ann_file_delimiter = '\t'
+    else:
+        ann_file_delimiter = args.file_delimiter
 
     logging.info('#### STEP 2 - RETREIVING SNPs FOR READS ####')
 
     snps_list = snpsInRead(in_bam_file, args.annotationFile,
-                           ann_file_delimiter)
+                           ann_file_delimiter, args.skip_first_line)
 
     logging.info('#### STEP 3 - CONVERTING BAM TO WIF ####')
 
