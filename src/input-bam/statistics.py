@@ -86,7 +86,7 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
             snp_valid += 1
             # number of reads aligned with the SNP
             logging.info(
-                '\nTotal number of read aligned with SNP: {0}'.format(count_read))
+                'Total number of read aligned with SNP: {0}'.format(count_read))
             statistics_file.write(
                 '\nTotal number of read aligned with SNP: {0}'.format(count_read))
 
@@ -96,7 +96,7 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
             statistics_file.write('\nNumber of read aligned with the first allele: {0}'.format(
                 frequences_observed['first']))
 
-            # reads aligned with the SNP in the first allele over all
+            # reads aligned with the SNP in the first allele
             logging.info('Percentual of read aligned with the first allele: {0}'.format(float(
                 frequences_observed['first']) / count_read * 100))
             statistics_file.write('\nPercentual of read aligned with the first allele: {0}'.format(float(
@@ -108,28 +108,36 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
             statistics_file.write('\nNumber of read aligned with the second allele: {0}'.format(
                 frequences_observed['second']))
 
-            # reads aligned with the SNP in the second allele over all
+            # reads aligned with the SNP in the second allele
             logging.info('Percentual of read aligned with the second allele: {0}'.format(float(
                 frequences_observed['second']) / count_read * 100))
             statistics_file.write('\nPercentual of read aligned with the second allele: {0}'.format(float(
                 frequences_observed['second']) / count_read * 100))
 
-            # reads aligned with the SNP - no first or second allele
+            # reads aligned with the SNP - different allele
             logging.info('Number of read aligned with different allele: {0}'.format(
                 frequences_observed['others']))
-            statistics_file.write('\nPercentual of read aligned with different allele:: {0}'.format(
+            statistics_file.info('\nNumber of read aligned with different allele: {0}'.format(
+                frequences_observed['others']))
+
+            logging.info('Percentual of read aligned with different allele: {0}'.format(
+                float(frequences_observed['others']) / count_read) * 100)
+            statistics_file.write('\nPercentual of read aligned with different allele: {0}'.format(
                 float(frequences_observed['others']) / count_read) * 100)
 
         else:
             snp_not_valid += 1
             logging.info(
-                '\nNo reads aligned with this snp: {0}'.format(snp_name))
+                'No reads aligned with this snp: {0}'.format(snp_name))
             statistics_file.write(
                 '\nNo reads aligned with this snp: {0}'.format(snp_name))
 
     prgbar.finish()
     logging.info(
-        '\n*************************************************************')
+        '#### TOTAL RESULTS ####')
+    statistics_file.write(
+        '\n#### TOTAL RESULTS ####')
+
     logging.info('Processed {0} SNPs'.format(snp_count))
     statistics_file.write('\nProcessed {0} SNPs'.format(snp_count))
 
