@@ -151,7 +151,7 @@ def main():
 
     args = parser.parse_args()
 
-    logging.info("#### STEP 1 - PROCESSING INPUT ARGUMENTS ####")
+    logging.info('#### STEP 1 - PROCESSING INPUT ARGUMENTS ####')
 
     in_bam_file = args.fileBAM
     out_root_dir = args.output_dir
@@ -178,12 +178,12 @@ def main():
 
     ann_file_delimiter = '\t'
 
-    logging.info("#### STEP 2 - RETREIVING SNPs FOR READS ####")
+    logging.info('#### STEP 2 - RETREIVING SNPs FOR READS ####')
 
     snps_list = snpsInRead(in_bam_file, args.annotationFile,
                            ann_file_delimiter)
 
-    logging.info("#### STEP 3 - CONVERTING BAM TO WIF ####")
+    logging.info('#### STEP 3 - CONVERTING BAM TO WIF ####')
 
     convertBamToWif(snps_list, out_dir)
 
