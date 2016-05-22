@@ -11,7 +11,7 @@ import progressbar
 import pysam
 
 
-def generate_statistics(annotation_file, file_delimiter, region, alignment_file, out_dir, skip_first_line):
+def generate_statistics(annotation_file, file_delimiter, region, alignment_file, skip_first_line):
     in_sam = pysam.AlignmentFile(alignment_file, 'rb')
 
     # return the number of SNPs in the file
@@ -31,8 +31,6 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
     snp_header_index_stop = header.index('chromEnd')
     snp_header_index_name = header.index('name')
     snp_header_observed = header.index('observed')
-
-    statistics_file = open(out_dir + 'statistics.txt', 'w')
 
     # read annotation file
     snp_valid = 0  # SNPs with almost 1 read aligned
@@ -57,11 +55,10 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
         frequences_observed = {'first': 0, 'second': 0, 'others': 0}
 
         logging.info('Loaded snp: {0}'.format(snp_name))
-        statistics_file.write('\nLoaded snp: {0}'.format(snp_name))
+
         frequences = {'A': 0, 'T': 0, 'C': 0, 'G': 0}
         count_read = 0
         for pileupcolumn in in_sam.pileup(region[0], snp_start, snp_stop):
-
             logging.debug('Coverage at base {0} = {1}'.format(
                 pileupcolumn.pos, pileupcolumn.n))
             for pileupread in pileupcolumn.pileups:
@@ -88,85 +85,51 @@ def generate_statistics(annotation_file, file_delimiter, region, alignment_file,
             # number of reads aligned with the SNP
             logging.info(
                 'Total number of read aligned with SNP: {0}'.format(count_read))
-            statistics_file.write(
-                '\nTotal number of read aligned with SNP: {0}'.format(count_read))
 
             # number of reads aligned with the SNP in the first allele
-            logging.info('Number of read aligned with the first allele: {0}'.format(
-                frequences_observed['first']))
-            statistics_file.write('\nNumber of read aligned with the first allele: {0}'.format(
-                frequences_observed['first']))
-
-            # reads aligned with the SNP in the first allele
-            logging.info('Percentual of read aligned with the first allele: {0}'.format(float(
-                frequences_observed['first']) / count_read * 100))
-            statistics_file.write('\nPercentual of read aligned with the first allele: {0}'.format(float(
-                frequences_observed['first']) / count_read * 100))
+            logging.info('Number of read aligned with the first allele: {0} ({1}%)'.format(
+                frequences_observed['first'], round((float(
+                    frequences_observed['first']) / count_read) * 100, 2)))
 
             # number of reads aligned with the SNP in the second allele
-            logging.info('Number of read aligned with the second allele: {0}'.format(
-                frequences_observed['second']))
-            statistics_file.write('\nNumber of read aligned with the second allele: {0}'.format(
-                frequences_observed['second']))
-
-            # reads aligned with the SNP in the second allele
-            logging.info('Percentual of read aligned with the second allele: {0}'.format(float(
-                frequences_observed['second']) / count_read * 100))
-            statistics_file.write('\nPercentual of read aligned with the second allele: {0}'.format(float(
-                frequences_observed['second']) / count_read * 100))
+            logging.info('Number of read aligned with the second allele: {0} ({1}%)'.format(
+                frequences_observed['second'], round((float(
+                    frequences_observed['second']) / count_read) * 100, 2)))
 
             # reads aligned with the SNP - different allele
-            logging.info('Number of read aligned with different allele: {0}'.format(
-                frequences_observed['others']))
-            statistics_file.info('\nNumber of read aligned with different allele: {0}'.format(
-                frequences_observed['others']))
-
-            logging.info('Percentual of read aligned with different allele: {0}'.format(
-                float(frequences_observed['others']) / count_read) * 100)
-            statistics_file.write('\nPercentual of read aligned with different allele: {0}'.format(
-                float(frequences_observed['others']) / count_read) * 100)
+            logging.info('Number of read aligned with different allele: {0} ({1}%)'.format(
+                frequences_observed['others'], round((float(
+                    frequences_observed['others']) / count_read) * 100, 2)))
 
         else:
             snp_not_valid += 1
             logging.info(
                 'No reads aligned with this snp: {0}'.format(snp_name))
-            statistics_file.write(
-                '\nNo reads aligned with this snp: {0}'.format(snp_name))
 
     prgbar.finish()
     logging.info(
         '#### TOTAL RESULTS ####')
-    statistics_file.write(
-        '\n#### TOTAL RESULTS ####')
 
     logging.info('Processed {0} SNPs'.format(snp_count))
-    statistics_file.write('\nProcessed {0} SNPs'.format(snp_count))
 
-    logging.info('SNPs with almost one read aligned (%): {0}'.format(
-        float(snp_valid) / snp_count) * 100)
-    statistics_file.write('\nSNPs with almost one read aligned (%): {0}'.format(
-        float(snp_valid) / snp_count) * 100)
-    logging.info('SNPs with no read aligned (%): {0}'.format(
-        float(snp_not_valid) / snp_count) * 100)
-    statistics_file.write('\nSNPs with no read aligned (%): {0}'.format(
-        float(snp_not_valid) / snp_count) * 100)
+    logging.info('SNPs with almost one read aligned: {0} ({1}%)'.format(
+        snp_valid, round(((float(
+            snp_valid) / snp_count) * 100), 2)))
+
+    logging.info('SNPs with no read aligned: {0} ({1}%)'.format(
+        snp_not_valid, round(((float(
+            snp_not_valid) / snp_count) * 100), 2)))
 
     logging.info('Total number of read aligned with the first allele: {0}'.format(
         read_with_first_allele))
-    statistics_file.write(
-        '\nTotal number of read aligned with the first allele: {0}'.format(read_with_first_allele))
 
     logging.info('Total number of read aligned with the second allele: {0}'.format(
         read_with_second_allele))
-    statistics_file.write(
-        '\nTotal number of read aligned with the second allele: {0}'.format(read_with_second_allele))
+
     logging.info('Total number of read aligned with different allele: {0}'.format(
         read_with_different_allele))
-    statistics_file.write(
-        '\nTotal number of read aligned with different allele: {0}'.format(read_with_different_allele))
 
     logging.info('Generation of statistics: Completed')
-    statistics_file.close()
     ann_file.close()
     in_sam.close()
 
@@ -195,7 +158,7 @@ def main():
                         help='Output (root) directory.',
                         required=True)
     parser.add_argument('-skip-first-line',
-                        action='store',
+                        action='store_true',
                         dest='skip_first_line',
                         help='set this flag if the first line IS NOT the header')
     parser.add_argument('-file-delimiter',
@@ -217,22 +180,20 @@ def main():
     else:
         log_level = logging.DEBUG
 
-    logging.basicConfig(level=log_level,
-                        format='%(levelname)-8s [%(asctime)s]  %(message)s',
-                        datefmt='%y%m%d %H%M%S')
-
     if not os.path.exists(out_root_dir):
         logging.error('Output dir not found.')
         sys.exit(1)
-
-    logging.info('StatisticsGenerator: Program Started')
-
-    region = check_region(in_region)
 
     out_dir = out_root_dir + '/'
 
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
+
+    prepare_loggers(out_dir, log_level)
+
+    logging.info('StatisticsGenerator: Program Started')
+
+    region = check_region(in_region)
 
     if args.file_delim is None:
         ann_file_delimiter = '\t'
@@ -240,7 +201,7 @@ def main():
         ann_file_delimiter = args.file_delimiter
 
     generate_statistics(args.annotationFile,
-                        ann_file_delimiter, region, in_bam_file, out_dir, args.skip_first_line)
+                        ann_file_delimiter, region, in_bam_file, args.skip_first_line)
 
     logging.info('StatisticsGenerator: Program Completed')
 
@@ -260,6 +221,20 @@ def file_len(file):
         for i, l in enumerate(f):
             pass
     return i
+
+
+def prepare_loggers(out_dir, log_level):
+    logging.basicConfig(filename=out_dir + 'statistics.txt',
+                        filemode='w',
+                        level=log_level,
+                        format='%(levelname)-8s [%(asctime)s]  %(message)s',
+                        datefmt='%y%m%d %H:%M:%S')
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        '[%(levelname)-8s] %(asctime)s - %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
 
 
 def check_region(input_region):
