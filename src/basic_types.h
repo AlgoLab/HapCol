@@ -80,10 +80,10 @@ struct options_t {
   : options_initialized(false),
     input_filename(""),
     haplotype_filename(""),
-    unweighted(true),
-    no_xs(true),
-    all_heterozygous(true),
-    unique(true),
+    unweighted(false),
+    no_xs(false),
+    all_heterozygous(false),
+    unique(false),
     error_rate(0.05),
     alpha(0.01)
   {}
