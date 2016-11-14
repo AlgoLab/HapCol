@@ -12,7 +12,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}") # -Wconversion")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -march=native")
 
-find_package(Boost 1.36 COMPONENTS program_options REQUIRED)
 
 add_executable (hapcol
   entry.h
@@ -31,7 +30,6 @@ add_executable (hapcol
 )
 
 
-target_link_libraries(hapcol ${Boost_LIBRARIES})
 install(TARGETS hapcol RUNTIME DESTINATION bin)
 
 

@@ -72,39 +72,140 @@ std::ostream& operator<<(std::ostream& out, const options_t& options) {
   return out;
 }
 
-#include <boost/program_options.hpp>
+#include <getopt.h>
+#include <sstream>
 
 options_t parse_arguments(int argc, char** argv) {
-  namespace po = boost::program_options;
 
   options_t ret;
-  po::options_description opts_desc("Program options");
-  opts_desc.add_options()
-    ("help,h", "produce (this) help message")
-    ("input,i", po::value<std::string>(&ret.input_filename)->required(), "file containing the input reads (in WIF format)")
-    ("haplotypes,o", po::value<std::string>(&ret.haplotype_filename)->required(), "file where the computed haplotypes will be written to")
-    ("discard-weights,u", po::bool_switch(&ret.unweighted), "discard weights")
-    ("no-ambiguous,x", po::bool_switch(&ret.no_xs), "do not mark ambiguous positions with Xs")
-    ("all-heterozygous,A", po::bool_switch(&ret.all_heterozygous), "all-heterozygous assumption")
-    ("unique,U", po::bool_switch(&ret.unique), "input as unique block")
-    ("error-rate,e", po::value<double>(&ret.error_rate)->default_value(ret.error_rate), "read error rate")
-    ("alpha,a", po::value<double>(&ret.alpha)->default_value(ret.alpha), "significance (smaller is better)");
 
-  po::variables_map vm;
-  try {
-    po::store(po::parse_command_line(argc, argv, opts_desc), vm);
-    if (vm.count("help")) {
-      std::cout << opts_desc << std::endl;
-      return ret;
-    }
-    po::notify(vm);
-    if ((ret.error_rate < 0.0) || (ret.error_rate > 1.0))  throw std::logic_error("error-rate must be a value between 0.0 and 1.0");
-    if ((ret.alpha < 0.0) || (ret.alpha > 1.0))  throw std::logic_error("alpha must be a value between 0.0 and 1.0");
-    ret.options_initialized= true;
-  } catch (std::exception& e) {
-    std::cout << "ERROR while parsing the program options: " << e.what() << std::endl;
+  // options description
+  std::ostringstream oss;
+
+  oss
+    << "Program options:" << std::endl
+
+    << "  -h [ --help ]" << std::string(4,'\t') 
+    << "produce (this) help message" << std::endl
+
+    << "  -i [ --input ] arg" << std::string(3,'\t')
+    << "file containing the input reads (in WIF" << std::endl
+    << std::string(5,'\t') << "format)" << std::endl
+
+    << "  -o [ --haplotypes ] arg" << std::string(2,'\t')
+    << "file where the computed haplotypes will" << std::endl
+    << std::string(5,'\t') << "be written to" << std::endl
+
+    << "  -u [ --discard-weights ]" << std::string(2,'\t')
+    << "discard weights" << std::endl
+
+    << "  -x [ --no-ambiguous ]" << std::string(3,'\t')
+    << "do not mark ambiguous positions with Xs" << std::endl
+
+    << "  -A [ --all-heterozygous ]" << std::string(2,'\t')
+    << "all-heterozygous assumption" << std::endl
+
+    << "  -U [ --unique ]" << std::string(3,'\t')
+    << "input as unique block" << std::endl
+
+    << "  -e [ --error-rate ] arg (="
+    << ret.error_rate << ")" << std::string(1,'\t')
+    << "read error rate" << std::endl
+
+    << "  -a [ --alpha ] arg (="
+    << ret.alpha << ")" << std::string(2,'\t')
+    << "significance (smaller is better)" << std::endl;
+
+  std::string opts_desc = oss.str();
+
+  // loop for obtaining the options
+  int opt;
+  bool sane = true;
+  std::string err;
+
+  while(1) {
+
+    static struct option long_options[] = {
+      {"help", no_argument, 0, 'h'},
+      {"input", required_argument, 0, 'i'},
+      {"haplotypes", required_argument, 0, 'o'},
+      {"discard-weights", no_argument, 0, 'u'},
+      {"no-ambiguous", no_argument, 0, 'x'},
+      {"all-heterozygous", no_argument, 0, 'A'},
+      {"unique", no_argument, 0, 'U'},
+      {"error-rate", required_argument, 0, 'e'},
+      {"alpha", required_argument, 0, 'a'},
+      {0, 0, 0, 0}
+    };
+
+    // get an option
+    int option_index = 0;
+    opt = getopt_long(argc, argv, "hi:o:uxAUe:a:", long_options, &option_index);
+
+    if(opt == -1) // end of options
+      break;
+
+    switch(opt)
+      {
+
+      case 'h' :
+	std::cout << opts_desc << std::endl;
+	return ret;
+      case 'i' :
+	ret.input_filename = optarg;
+	break;
+      case 'o' :
+	ret.haplotype_filename = optarg;
+	break;
+      case 'u' :
+	ret.unweighted = true;
+	break;
+      case 'x' :
+	ret.no_xs = true;
+	break;
+      case 'A' :
+	ret.all_heterozygous = true;
+	break;
+      case 'U' :
+	ret.unique = true;
+	break;
+      case 'e' :
+	ret.error_rate = atof(optarg);
+	break;
+      case 'a' :
+	ret.alpha = atof(optarg);
+	break;
+      default :
+	sane = false;
+	err = "unrecognized option";
+      }
+  }
+
+  // sanity check on required options and ranges
+  if(ret.input_filename == "") {
+    sane = false;
+    err = "the option '--input' is required but missing";
+  }
+  if(ret.haplotype_filename == "") {
+    sane = false;
+    err = "the option '--haplotypes' is required but missing";
+  }
+  if((ret.error_rate < 0.0) || (ret.error_rate > 1.0)) {
+    sane = false;
+    err = "error-rate must be a value between 0.0 and 1.0";
+  }
+  if((ret.alpha < 0.0) || (ret.alpha > 1.0)) {
+    sane = false;
+    err = "alpha must be a value between 0.0 and 1.0";
+  }
+
+  if(!sane) {
+    std::cout << "ERROR while parsing the program options: ";
+    std::cout << err << std::endl;
     std::cout << opts_desc << std::endl;
   }
+  else
+    ret.options_initialized = true;
 
   return ret;
 }
