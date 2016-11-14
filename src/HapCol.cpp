@@ -182,7 +182,7 @@ int main(int argc, char** argv)
   INFO("Discard weights? " << (options.unweighted?"True":"False"));
   INFO("Do not add X's? " << (options.no_xs?"True":"False"));
   INFO("All-heterozygous assumption? " << (options.all_heterozygous?"True":"False"));
-  INFO("Input as unique block?" << (options.unique?"True":"False"));
+  INFO("Input as unique block? " << (options.unique?"True":"False"));
   INFO("Error rate: " << options.error_rate);
   INFO("Alpha: " << options.alpha);
 
