@@ -65,7 +65,6 @@ std::ostream& operator<<(std::ostream& out, const options_t& options) {
     << "Haplotype filename: '" << options.haplotype_filename << '\'' << SEP
     << "Discard weights? " << (options.unweighted?"True":"False") << SEP
     << "Mask ambiguous positions? " << (options.no_xs?"False":"True") << SEP
-    << "all-heterozygous assumption?" << (options.all_heterozygous?"True":"False") << SEP
     << "read input as unique block?" << (options.unique?"True":"False") << SEP
     << "Error rate: " << options.error_rate << SEP
     << "Alpha: " << options.alpha;
@@ -102,9 +101,6 @@ options_t parse_arguments(int argc, char** argv) {
     << "  -x [ --no-ambiguous ]" << std::string(3,'\t')
     << "do not mark ambiguous positions with Xs" << std::endl
 
-    << "  -A [ --all-heterozygous ]" << std::string(2,'\t')
-    << "all-heterozygous assumption" << std::endl
-
     << "  -U [ --unique ]" << std::string(3,'\t')
     << "input as unique block" << std::endl
 
@@ -131,7 +127,6 @@ options_t parse_arguments(int argc, char** argv) {
       {"haplotypes", required_argument, 0, 'o'},
       {"discard-weights", no_argument, 0, 'u'},
       {"no-ambiguous", no_argument, 0, 'x'},
-      {"all-heterozygous", no_argument, 0, 'A'},
       {"unique", no_argument, 0, 'U'},
       {"error-rate", required_argument, 0, 'e'},
       {"alpha", required_argument, 0, 'a'},
@@ -140,7 +135,7 @@ options_t parse_arguments(int argc, char** argv) {
 
     // get an option
     int option_index = 0;
-    opt = getopt_long(argc, argv, "hi:o:uxAUe:a:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "hi:o:uxUe:a:", long_options, &option_index);
 
     if(opt == -1) // end of options
       break;
@@ -162,9 +157,6 @@ options_t parse_arguments(int argc, char** argv) {
 	break;
       case 'x' :
 	ret.no_xs = true;
-	break;
-      case 'A' :
-	ret.all_heterozygous = true;
 	break;
       case 'U' :
 	ret.unique = true;

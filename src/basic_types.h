@@ -82,7 +82,7 @@ struct options_t {
     haplotype_filename(""),
     unweighted(false),
     no_xs(false),
-    all_heterozygous(false),
+    all_heterozygous(true),
     unique(false),
     error_rate(0.05),
     alpha(0.01)

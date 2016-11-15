@@ -181,7 +181,6 @@ int main(int argc, char** argv)
   INFO("Haplotype filename: '" << options.haplotype_filename << '\'');
   INFO("Discard weights? " << (options.unweighted?"True":"False"));
   INFO("Do not add X's? " << (options.no_xs?"True":"False"));
-  INFO("All-heterozygous assumption? " << (options.all_heterozygous?"True":"False"));
   INFO("Input as unique block? " << (options.unique?"True":"False"));
   INFO("Error rate: " << options.error_rate);
   INFO("Alpha: " << options.alpha);
@@ -219,20 +218,20 @@ int main(int argc, char** argv)
     Block block = blockreader.get_block();
     DEBUG("BLOCK: "<< counter_block);
 
-    ColumnReader1 columnreader_jump(block, !options.all_heterozygous);
+    ColumnReader1 columnreader_nojump(block, false); // always all-heterzygous
 
-    vector<bool> haplotype1(columnreader_jump.num_cols());
-    vector<bool> haplotype2(columnreader_jump.num_cols());
+    vector<bool> haplotype1(columnreader_nojump.num_cols());
+    vector<bool> haplotype2(columnreader_nojump.num_cols());
 
-    if(columnreader_jump.num_cols() > 0) {
-      dp(constants, options, columnreader_jump, haplotype1, haplotype2, step, OPT,
+    if(columnreader_nojump.num_cols() > 0) {
+      dp(constants, options, columnreader_nojump, haplotype1, haplotype2, step, OPT,
          MAX_COV, MAX_L, MAX_K, MAX_GAPS, counter_block++);
     } else {
-      DEBUG("jumped");
+      DEBUG("jumped"); // should never happen now
       ++counter_block;
     }
 
-    ColumnReader1 columnreader_nojump(block, false);
+    ColumnReader1 columnreader_jump(block, true); // always jump (swap roles)
 
     counter_columns += columnreader_nojump.num_cols();
     counter_inhomo += (columnreader_nojump.num_cols() - columnreader_jump.num_cols());
