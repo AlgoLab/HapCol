@@ -150,8 +150,7 @@ int map_fragment(const vector<char> &read, const vector<unsigned int> &weights, 
 void make_haplo(const vector<bool> &haplo1, const vector<bool> &haplo2,
                 const vector<vector<char> > &mapping_haplo1, const vector<vector<char> > &mapping_haplo2,
                 const vector<vector<unsigned int> > &weight_mapping_haplo1, const vector<vector<unsigned int> > &weight_mapping_haplo2,
-                vector<char> &haplo_out1, vector<char> &haplo_out2, Counter &XS1, Counter &XS2,
-                const options_t &options);
+                vector<char> &haplo_out1, vector<char> &haplo_out2, Counter &XS1, Counter &XS2);
 void count_alleles(const vector<char> &col, const vector<unsigned int> &weight_col,
                    vector<int> &counter);
 
@@ -1542,7 +1541,7 @@ void add_xs(const vector<bool> &haplo1, const vector<bool> &haplo2,
   }
 
   make_haplo(haplo1, haplo2, mapping_haplo1, mapping_haplo2, weight_mapping_haplo1, weight_mapping_haplo2,
-             haplo1_out, haplo2_out, XS1, XS2, options);
+             haplo1_out, haplo2_out, XS1, XS2);
 
   MISMATCHES += total_errors;
   DEBUG("TOTAL MISMATCHES DURING MAPPING:   " << total_errors);
@@ -1591,8 +1590,7 @@ int map_fragment(const vector<char> &read, const vector<unsigned int> &weights, 
 void make_haplo(const vector<bool> &haplo1, const vector<bool> &haplo2,
                 const vector<vector<char> > &mapping_haplo1, const vector<vector<char> > &mapping_haplo2,
                 const vector<vector<unsigned int> > &weight_mapping_haplo1, const vector<vector<unsigned int> > &weight_mapping_haplo2,
-                vector<char> &haplo_out1, vector<char> &haplo_out2, Counter &XS1, Counter &XS2,
-                const options_t &options) {
+                vector<char> &haplo_out1, vector<char> &haplo_out2, Counter &XS1, Counter &XS2) {
   unsigned int count_X1 = 0;
   unsigned int count_X2 = 0;
   vector<int> counter1(2);
@@ -1624,14 +1622,12 @@ void make_haplo(const vector<bool> &haplo1, const vector<bool> &haplo2,
       }
     }
 
-    if(options.all_heterozygous) {
-      if(haplo_out1[col] == 'X' && haplo_out2[col] != 'X') {
-        haplo_out1[col] = (haplo_out2[col] == '0')? '1' : '0';
-        --count_X1;
-      } else if (haplo_out1[col] != 'X' && haplo_out2[col] == 'X') {
-        haplo_out2[col] = (haplo_out1[col] == '0')? '1' : '0';
-        --count_X2;
-      }
+    if(haplo_out1[col] == 'X' && haplo_out2[col] != 'X') {
+      haplo_out1[col] = (haplo_out2[col] == '0')? '1' : '0';
+      --count_X1;
+    } else if (haplo_out1[col] != 'X' && haplo_out2[col] == 'X') {
+      haplo_out2[col] = (haplo_out1[col] == '0')? '1' : '0';
+      --count_X2;
     }
   }
 
