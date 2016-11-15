@@ -95,10 +95,8 @@ void replace_if_less(T& a, const T& b) {
   if(a > b) { a = b;}
 }
 
-void fill_haplotypes(ColumnReader1 &columnreader, const vector<bool> &haplotype1, const vector<bool> &haplotype2,
-                     vector<bool> &complete_haplo1, vector<bool> &complete_haplo2, const options_t &optionts);
-void fill_haplotypes(ColumnReader1 &columnreader, const vector<bool> &haplotype1, const vector<bool> &haplotype2,
-                     vector<char> &output_block1, vector<char> &output_block2, const options_t &optionts);
+void format_haplotypes(const vector<bool> &haplotype1, const vector<bool> &haplotype2,
+                     vector<char> &output_block1, vector<char> &output_block2);
 void write_haplotypes(const vector<vector<char> > &haplotype_blocks1, const vector<vector<char> > &haplotype_blocks2,
                       ofstream &ofs);
 
@@ -237,19 +235,10 @@ int main(int argc, char** argv)
     counter_inhomo += (columnreader_nojump.num_cols() - columnreader_jump.num_cols());
 
     if(!options.no_xs) {
-      vector<bool> filled_haplo1(columnreader_nojump.num_cols());
-      vector<bool> filled_haplo2(columnreader_nojump.num_cols());
-
-      DEBUG("Starting fill");
-
-      fill_haplotypes(columnreader_nojump, haplotype1, haplotype2, filled_haplo1, filled_haplo2, options);
-
-      DEBUG("Filled haplotypes");
-
       vector<char> xs_haplotype1(columnreader_nojump.num_cols());
       vector<char> xs_haplotype2(columnreader_nojump.num_cols());
 
-      add_xs(filled_haplo1, filled_haplo2, xs_haplotype1, xs_haplotype2, columnreader_nojump, options,
+      add_xs(haplotype1, haplotype2, xs_haplotype1, xs_haplotype2, columnreader_nojump, options,
              XS1, XS2, TOTAL_MISMATCHES);
 
       DEBUG("Added X's");
@@ -261,9 +250,7 @@ int main(int argc, char** argv)
       vector<char> output_block1(columnreader_nojump.num_cols());
       vector<char> output_block2(columnreader_nojump.num_cols());
 
-      fill_haplotypes(columnreader_nojump, haplotype1, haplotype2, output_block1, output_block2, options);
-
-      DEBUG("Filled haplotypes");
+      format_haplotypes(haplotype1, haplotype2, output_block1, output_block2);
 
       haplotype_blocks1.push_back(output_block1);
       haplotype_blocks2.push_back(output_block2);
@@ -305,39 +292,9 @@ int main(int argc, char** argv)
 
 
 
-void fill_haplotypes(ColumnReader1 &columnreader, const vector<bool> &haplotype1, const vector<bool> &haplotype2,
-                     vector<bool> &complete_haplo1, vector<bool> &complete_haplo2, const options_t &options)
+void format_haplotypes(const vector<bool> &haplotype1, const vector<bool> &haplotype2,
+                     vector<char> &output_block1, vector<char> &output_block2)
 {
-  columnreader.restart();
-
-  vector<bool>::const_iterator ihap1 = haplotype1.begin();
-  vector<bool>::const_iterator ihap2 = haplotype2.begin();
-
-  vector<bool>::iterator iout1 = complete_haplo1.begin();
-  vector<bool>::iterator iout2 = complete_haplo2.begin();
-
-  while(columnreader.has_next()) {
-    if(!options.all_heterozygous && columnreader.was_homozygous()) {
-      bool allele = (columnreader.homozigosity())? true : false;
-      *iout1 = allele;
-      *iout2 = allele;
-    } else {
-      *iout1 = *ihap1;
-      *iout2 = *ihap2;
-
-      ++ihap1;
-      ++ihap2;
-    }
-    ++iout1;
-    ++iout2;
-  }
-}
-
-
-void fill_haplotypes(ColumnReader1 &columnreader, const vector<bool> &haplotype1, const vector<bool> &haplotype2,
-                     vector<char> &output_block1, vector<char> &output_block2, const options_t &options)
-{
-  columnreader.restart();
 
   vector<bool>::const_iterator ihap1 = haplotype1.begin();
   vector<bool>::const_iterator ihap2 = haplotype2.begin();
@@ -345,18 +302,12 @@ void fill_haplotypes(ColumnReader1 &columnreader, const vector<bool> &haplotype1
   vector<char>::iterator iout1 = output_block1.begin();
   vector<char>::iterator iout2 = output_block2.begin();
 
-  while(columnreader.has_next()) {
-    if(!options.all_heterozygous && columnreader.was_homozygous()) {
-      char allele = (columnreader.homozigosity())? '1' : '0';
-      *iout1 = allele;
-      *iout2 = allele;
-    } else {
-      *iout1 = (*ihap1)? '1' : '0';
-      *iout2 = (*ihap2)? '1' : '0';
+  while(ihap1 != haplotype1.end()) {
+    *iout1 = (*ihap1)? '1' : '0';
+    *iout2 = (*ihap2)? '1' : '0';
 
-      ++ihap1;
-      ++ihap2;
-    }
+    ++ihap1;
+    ++ihap2;
     ++iout1;
     ++iout2;
   }
