@@ -1,8 +1,6 @@
 #ifndef BALANCED_COMBINATIONS_H
 #define BALANCED_COMBINATIONS_H
 
-#define BALANCED_COMBINATIONS_DEBUG // for debugging
-
 #include "basic_types.h"
 #include "combinations.h"
 
@@ -66,20 +64,6 @@ class BalancedCombinations {
   // try to get the next one (may not exist)
   bool s_;
   void try_next();
-
-
-  // for debugging ...
-  #ifdef BALANCED_COMBINATIONS_DEBUG
-
-  // formatted column and vector output
-  string column_to_string(const BitColumn & col, const Counter & len);
-  string vector_to_string(const std::vector<Counter> & v);
-
-  // spit out all valid combinations
-  void all_combinations(bool verbose = false);
-
-  #endif // BALANCED_COMBINATIONS_DEBUG
-  // ..
 
 };
 

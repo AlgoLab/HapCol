@@ -21,22 +21,9 @@ void BalancedCombinations::initialize(const Counter n, const Counter k,
   p.push_back(n_ - col_.count());
   p.push_back(col_.count());
 
-  // ..
-  #ifdef BALANCED_COMBINATIONS_DEBUG
-  cout << "n, k, c : " << n_ << ", " << k_ << ", " << c_ << endl;
-  cout << "p0, p1 : " << p[0] << ", " << p[1] << " ..." << endl;
-  #endif
-  // ..
-
   // build mapping for composing combinations and initialize arrays
   build_mapping();
   initialize_arrays();
-
-  // ..
-  #ifdef BALANCED_COMBINATIONS_DEBUG
-  all_combinations();
-  #endif
-  // ..
 
   // initialize the counters
   t_ = 0;
@@ -44,12 +31,6 @@ void BalancedCombinations::initialize(const Counter n, const Counter k,
   j_ = 0;
   ii_ = 0;
   jj_ = 0;
-
-  // ..
-  #ifdef BALANCED_COMBINATIONS_DEBUG
-  cout << endl << "<<-- BalancedCombinations::try_next() -->>" << endl;
-  #endif
-  // ..
 
   has_next_ = true;
   s_ = true; // prime the try loop
@@ -92,14 +73,6 @@ void BalancedCombinations::build_mapping() {
     else
       map[0].push_back(i_);
   }
-
-  // ..
-  #ifdef BALANCED_COMBINATIONS_DEBUG
-  cout << endl << "<<-- BalancedCombinations::build_mapping() -->>" << endl;
-  cout << "map_0 : " << vector_to_string(map[0]) << endl;
-  cout << "map_1 : " << vector_to_string(map[1]) << endl;
-  #endif
-  // ..
 }
 
 
@@ -128,12 +101,6 @@ void BalancedCombinations::retrieve_c0() {
       generator.get_combination(comb);
       c[0][i_].push_back(comb);
 
-      // ..
-      #ifdef BALANCED_COMBINATIONS_DEBUG
-      cout << "add to c0 : " << comb << endl;
-      #endif
-      // ..
-
     }
   }
 }
@@ -149,12 +116,6 @@ void BalancedCombinations::retrieve_c1() {
       generator.next(); // should always be at least the empty comb
       generator.get_combination(comb);
       c[1][j_].push_back(comb);
-
-      // ..
-      #ifdef BALANCED_COMBINATIONS_DEBUG
-      cout << "add to c1 : " << comb << endl;
-      #endif
-      // ..
 
     }
   }
@@ -196,14 +157,6 @@ void BalancedCombinations::try_next() {
 	    retrieve_c1(); // c[1][j_]
 	    while(jj_ < c[1][j_].size()) {
 
-	      // ..
-              #ifdef BALANCED_COMBINATIONS_DEBUG
-	      cout << "\t\t\t t, i, j, ii, jj : " << t_ << ", " << i_ << ", " << j_;
-	      cout << ", " << ii_ << ", " << jj_ << endl;
-	      cout << ". s is " << (s_ ? "true" : "false" ) << endl;
-              #endif
-	      // ..
-
 	      // at this point, jj_,ii_,j_,i_,t_ is a valid configuration
 	      if(s_)
 		return;
@@ -225,81 +178,3 @@ void BalancedCombinations::try_next() {
 
   has_next_ = false; // the end
 }
-
-
-// for debugging ...
-/**********************************************************************/
-#ifdef BALANCED_COMBINATIONS_DEBUG
-
-
-string BalancedCombinations::column_to_string(const BitColumn & col,
-					      const Counter & len) {
-
-  string str = col.to_string();
-  reverse(str.begin(), str.end());
-
-  return str.substr(0, len);
-}
-
-
-string BalancedCombinations::vector_to_string(const vector<Counter> & v) {
-
-  string str = "";
-  for(i = 0; i < v.size(); ++i)
-    str.append(to_string(v[i]) + " ");
-
-  return str;
-}
-
-
-void BalancedCombinations::all_combinations(bool verbose) {
-
-  cout << endl << "<<-- BalancedCombinations::all_combinations() -->>" << endl;
-  for(t_ = 0; t_ <= k_; ++t_) {
-    cout << endl << "t : " << t_ << " -------------------------------" << endl;
-
-    for(i_ = 0; i_ <= min(p[0], t_); ++i_) {
-      j_ = t_ - i_;
-
-      // check if j_ is feasible
-      if(j_ > p[1])
-	continue;
-
-      cout << "i, j : " << i_ << ", " << j_ << " ..." << endl;
-
-      // check balance threshold
-      if((p[0] - i_ + min(p[1], t_ - i_)) < c_)
-	continue;
-      if((p[1] - j_ + min(p[0], t_ - j_)) < c_)
-	continue;
-
-      retrieve_c0(); // c[0][i_]
-      for(ii_ = 0; ii_ < c[0][i_].size(); ++ii_) {
-
-	retrieve_c1(); // c[1][j_]
-	for(jj_ = 0; jj_ < c[1][j_].size(); ++jj_) {
-
-	  if(verbose) {
-	    cout << endl << c[0][i_][ii_];
-	    cout << " + " << c[1][j_][jj_] << endl;
-	  }
-	  else {
-	    cout << "  " << column_to_string(c[0][i_][ii_], p[0]) << " + ";
-	    cout << column_to_string(c[1][j_][jj_], p[1]);
-	  }
-
-	  make_current(); // current_ should hold the current value
-
-	  cout << " -> ";
-	  if(verbose)
-	    cout << current_;
-	  else
-	    cout << column_to_string(current_, n_);
-	  cout << endl;
-	}
-      }
-    }
-  }
-}
-
-#endif // BALANCED_COMBINATIONS_DEBUG
