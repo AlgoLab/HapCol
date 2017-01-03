@@ -38,7 +38,6 @@
 #include "basic_types.h"
 #include "binomial.h"
 #include "combinations.h"
-#include "balanced_combinations.h"
 #include "new_columnreader.h"
 #include "blockreader.h"
 
@@ -154,7 +153,6 @@ void make_haplo(const vector<bool> &haplo1, const vector<bool> &haplo2,
                 vector<char> &haplo_out1, vector<char> &haplo_out2, Counter &XS1, Counter &XS2);
 void count_alleles(const vector<char> &col, const vector<unsigned int> &weight_col,
                    vector<int> &counter);
-int debug_balanced(int argc, char ** argv);
 
 
 
@@ -168,8 +166,6 @@ int main(int argc, char** argv)
   INFO("HapCol");
 #endif
   INFO("Starting...");
-
-  return debug_balanced(argc, argv);
 
   Counter threshold_coverage = 30;
 
@@ -291,45 +287,6 @@ int main(int argc, char** argv)
     //write_haplotypes(haplotype_blocks1, haplotype_blocks2, cout);
     return EXIT_FAILURE;
   }
-}
-
-
-
-int debug_balanced(int argc, char ** argv) {
-
-  cout << endl << "*** DEBUG balanced combinations generator ***" << endl;
-
-  if(argc < 4) throw logic_error("argc < 4"); // assert not working (??)
-  string m = argv[1];
-  unsigned int k = atoi(argv[2]);
-  double r = atof(argv[3]);
-
-  unsigned int n = m.length();
-  if(k > n) throw logic_error("k > n"); // assert not working
-
-  cout << "col : " << m << endl;
-  cout << n << " " << k << " " << r << endl;
-
-  BitColumn comb;
-  comb.reset();
-  for(size_t i = 0; i < n; ++i)
-    if(m[i] == '1')
-      comb.set(i);
-
-  cout << endl << "<-- balanced generator -->" << endl << endl;
-  cout << "initialize with : " << column_to_string(comb,n) << endl << endl;
-
-  BalancedCombinations bal_gen;
-  bal_gen.initialize(n, k, comb, r);
-
-  while(bal_gen.has_next()) {
-    bal_gen.next();
-    bal_gen.get_combination(comb);
-
-    cout << column_to_string(comb,n) << endl;
-  }
-
-  return 0;
 }
 
 

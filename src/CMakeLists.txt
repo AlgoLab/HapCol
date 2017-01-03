@@ -21,8 +21,6 @@ add_executable (hapcol
   blockreader.h
   blockreader.cpp
   combinations.h
-  balanced_combinations.h
-  balanced_combinations.cpp
   binomial.h
   binomial.cpp
   basic_types.h
