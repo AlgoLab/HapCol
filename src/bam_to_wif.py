@@ -33,10 +33,12 @@ def load_snps(alignment_file, variant_file, file_delimiter, chromosome, base_q=N
     logging.info('Number of fetched reads: {}'.format(total_read_number))
 
     out_map = {}
-
     total_variant_number = file_len(variant_file)
     var_file = open(variant_file)
 
+    valid = ['A', 'T', 'C', 'G']
+
+    x = 0
     for line in tqdm(var_file, total=total_variant_number, desc="Variant counter", miniters=1):
 
         splitted = line.split(file_delimiter)
@@ -52,8 +54,6 @@ def load_snps(alignment_file, variant_file, file_delimiter, chromosome, base_q=N
 
             if read.qname not in out_map:
                 out_map[read.qname] = {'snp_list': [], 'mq': 0}
-
-            valid = ['A', 'T', 'C', 'G']
 
             try:
                 base_value = read.seq[snp_position - read.reference_start]
@@ -78,6 +78,7 @@ def load_snps(alignment_file, variant_file, file_delimiter, chromosome, base_q=N
             except IndexError:
                 continue
 
+            logging.debug("Found Snp: {} {} {} {}".format(snp_position, base_value, allele, base_quality))
             out_map[read.qname]['snp_list'].append((snp_position, base_value, allele, base_quality))
             out_map[read.qname]['mq'] = read.mapping_quality
 
@@ -93,7 +94,7 @@ def write_wif(read_snp_map, out_dir):
         snp_list = snp_dict['snp_list']
         mq = snp_dict['mq']
 
-        if len(snp_list) == 0:  # No SNP found for this read
+        if len(snp_list) == 0:  # No SNP found for this read or read empty
             continue
 
         output_file.write("{}".format(read_name))
@@ -103,7 +104,7 @@ def write_wif(read_snp_map, out_dir):
             a = snp[2]  # allele
             q = snp[3]  # base quality
             output_file.write(" : {} {} {} {}".format(p, b, a, q))
-            output_file.write(" # {} {} NA\n".format(len(snp_list), mq))
+        output_file.write(" # {} {} NA\n".format(len(snp_list), mq))
 
 
 def calculate_coverage(read_snp_map):
@@ -113,7 +114,7 @@ def calculate_coverage(read_snp_map):
         snp_list = snp_dict['snp_list']
         cov += len(snp_list)
 
-    avg = cov / read_number
+    avg = (cov / read_number) * 100
     logging.info("Average Coverage for {}: {}%".format(read_number, avg))
 
 
@@ -127,10 +128,8 @@ def main():
                         help='Output (root) directory. Default: current directory')
     parser.add_argument('-file-delimiter', action='store', dest='fileDelim',
                         help='Set the file delimiter for the variant file. Default: \\t')
-    parser.add_argument('-c', action='store_true', dest='coverageFlag', help="If set calculate reads coverage and "
-                                                                             "return to stdout", default=False)
-    parser.add_argument('--skip-write', '-sw', action='store_true', dest='skipWrite',
-                        help='When set, no files will be written', default=False)
+    parser.add_argument('-c', action='store_true', dest='coverageFlag',
+                        help="If set calculate reads coverage and return to stdout", default=False)
     parser.add_argument('--chromosome', '-chr', action='store', dest='chromosome',
                         help='Chromosome to analyze', default='chr1')
     parser.add_argument('--base-quality', '-bq', action='store', dest='baseQuality',
@@ -181,9 +180,8 @@ def main():
         logging.info('#### Calculating coverage ####')
         calculate_coverage(snps_map_info)
 
-    if not args.skipWrite:
-        logging.info('#### Writing Wif ####')
-        write_wif(snps_map_info, out_dir)
+    logging.info('#### Writing Wif ####')
+    write_wif(snps_map_info, out_dir)
 
     logging.info('BamToWif: Program Completed')
 
