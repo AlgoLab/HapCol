@@ -181,6 +181,7 @@ int main(int argc, char** argv)
   INFO("Input as unique block? " << (options.unique?"True":"False"));
   INFO("Error rate: " << options.error_rate);
   INFO("Alpha: " << options.alpha);
+  INFO("Balance ratio: " << options.ratio);
 
   if (!options.options_initialized) {
     FATAL("Arguments not correctly initialized! Exiting..");
