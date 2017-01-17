@@ -119,7 +119,7 @@ void represent_column(const Column &column, BitColumn &result, Counter &cov,
 void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &cov,
                const BitColumn &comb_gaps, const BitColumn &comb_no_gaps);
 unsigned int compute_index_of(const BitColumn &mask, const unsigned int &cov, const unsigned int &num_gaps,
-                              const BitColumn &pos_gaps, Combinations &generator);
+                              const BitColumn &pos_gaps);
 void cut(const BitColumn &in_col, BitColumn &cut_mask, const vector<Pointer> &indexer, Counter &active_pj);
 void extract_common_mask(const Column &column_q, const Pointer &q_pointer,
                          const Column &column_j, const BitColumn &mask_colj,
@@ -785,7 +785,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
                     //Counter index = generator.cumulative_indexof(mask_qj, active_qj);
                     //Leave .count()
                     Counter index = compute_index_of(mask_qj, active_qj, num_pos_gaps[indexer_pointer - q],
-                                                     pos_gaps[indexer_pointer - q], generator);
+                                                     pos_gaps[indexer_pointer - q]);
                     temp = prevision[prevision_pointer][q][index] + weight_mask + cumulative_homo;
                     if(temp < current_cost) {
                       current_cost = temp;
@@ -808,7 +808,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
                   {
                     //Counter index = generator.cumulative_indexof(mask_qj, active_qj);
                     Counter index = compute_index_of(mask_qj, active_qj, num_pos_gaps[indexer_pointer - q],
-                                                     pos_gaps[indexer_pointer - q], generator);
+                                                     pos_gaps[indexer_pointer - q]);
                     temp = prevision[prevision_pointer][q][index] + weight_mask + cumulative_homo;
                     if(temp < current_cost) {
                       current_cost = temp;
@@ -878,7 +878,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
                 //Counter index = generator.cumulative_indexof(cut_mask, active_pj);
                 Counter index = compute_index_of(cut_mask, active_pj, num_pos_gaps[indexer_pointer + p],
-                                                 pos_gaps[indexer_pointer + p], generator);
+                                                 pos_gaps[indexer_pointer + p]);
                 Pointer new_prevision_pointer = next(prevision_pointer, prevision.size(), p);
                 Cost& temp = prevision[new_prevision_pointer][p][index];
                 if(current_cost < temp) {
@@ -1171,7 +1171,7 @@ void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &
 
 
 unsigned int compute_index_of(const BitColumn &mask, const unsigned int &cov, const unsigned int &num_gaps,
-                              const BitColumn &pos_gaps, Combinations &generator)
+                              const BitColumn &pos_gaps)
 {
   BitColumn comb_gaps;
   BitColumn comb_no_gaps;
@@ -1191,7 +1191,7 @@ unsigned int compute_index_of(const BitColumn &mask, const unsigned int &cov, co
     }
   }
 
-  return (generator.cumulative_indexof(comb_no_gaps, cov - num_gaps) << num_gaps) | ((unsigned int) comb_gaps.to_ulong());
+  return (binom_coeff::cumulative_indexof(comb_no_gaps, cov - num_gaps) << num_gaps) | ((unsigned int) comb_gaps.to_ulong());
   //  return generator.cumulative_indexof(comb_no_gaps, cov - num_gaps) +
   //  ((unsigned int) comb_gaps.to_ulong()) * binom_coeff::binomial_coefficient(cov - num_gaps, k);
 }
