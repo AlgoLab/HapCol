@@ -22,33 +22,15 @@ def extract_accuracy_range(bed_file, chromosome):
 
     :param bed_file:
     :param chromosome: if None, all chromosomes are read
-    :return: an array containing tuples [(a,b),(b+1,c), (d,e) ...]
+    :return: the set of all high-confidence positions included in the bed file
     """
-    out = []
+    out = {}
     with open(bed_file, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         for row in reader:
-            if chromosome and row[0] == chromosome:
-                out.append((int(row[1]), int(row[2])))
-            elif not chromosome:
-                out.append((int(row[1]), int(row[2])))
+            if chromosome and row[0] == chromosome or not chromosome:
+                [out.add(x) for x in range(int(row[1]), int(row[2]) + 1)]
     return out
-
-
-def check_accuracy(position, ranges):
-    """
-
-    :param position:
-    :param ranges: an array of tuples containing ranges --> [ (a,b), (c,d), ... ]
-    :return: true if position is within one of the ranges
-    """
-    for r in ranges:
-        r0, r1 = r
-        if int(position) < r0:
-            return False
-        if r0 <= int(position) <= r1:
-            return True
-    return False
 
 
 def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None):
@@ -63,11 +45,8 @@ def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None):
     vcf_out = VariantFile(filename, 'w', header=vcf_in.header)
 
     for row in vcf_in:
-        if chromosome and chromosome == row.chrom:
-            if check_accuracy(row.pos, ranges):
-                vcf_out.write(row)
-        else:
-            if check_accuracy(row.pos, ranges):
+        if chromosome and chromosome == row.chrom or not chromosome:
+            if row.pos in ranges:
                 vcf_out.write(row)
 
 
