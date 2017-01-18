@@ -37,7 +37,7 @@
 
 #include "basic_types.h"
 #include "binomial.h"
-#include "combinations.h"
+#include "balanced_combinations.h"
 #include "new_columnreader.h"
 #include "blockreader.h"
 
@@ -476,7 +476,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
   //INITIALIZATION
 
-  Combinations generator;
+  BalancedCombinations generator;
   column_reader.restart();
   Counter step = 0;
   Column column;
@@ -723,7 +723,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       //Enumerate all the combinations
 
-      generator.initialize_cumulative(cov_j - num_gaps, k_j[input_pointer]);
+      generator.initialize(cov_j - num_gaps, k_j[input_pointer], proj, options.ratio);
       while(generator.has_next())
         {
           generator.next();
