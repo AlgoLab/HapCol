@@ -24,7 +24,7 @@ def extract_accuracy_range(bed_file, chromosome):
     :param chromosome: if None, all chromosomes are read
     :return: the set of all high-confidence positions included in the bed file
     """
-    out = {}
+    out = set()
     with open(bed_file, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         for row in reader:

@@ -31,16 +31,16 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.input_file):
-        logging.error('Input file not exists.')
-        sys.exit(1)
-
     if args.verbosity:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
 
     prepare_loggers(log_level)
+
+    if not os.path.exists(args.input_file):
+        logging.error('Input file not exists.')
+        sys.exit(1)
 
     logging.info('Program Started')
 
@@ -59,7 +59,7 @@ def main():
     if args.file_del is None:
         file_delimiter = '\t'
     else:
-        file_delimiter = args.file_delim
+        file_delimiter = args.file_del
 
     threshold = 80
     if args.threshold is not None:
@@ -84,25 +84,11 @@ def prepare_loggers(log_level):
                         datefmt='%y%m%d %H:%M:%S')
 
 
-def get_file_length(file):
-    """
-    Return the number of row ( header excluded )
-    :param file:
-    :return:
-    """
-    length = 0
-    if file is not None:
-        try:
-            f = open(file, 'r')
-            for line in f:
-                if line.startswith('#'):
-                    continue
-                else:
-                    length += 1
-            f.close()
-        except Exception as e:
-            logging.error("Error during opening file. {0}".format(e))
-    return length
+def file_len(fname):
+    with open(fname) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
 
 
 def extract_accuracy_range(bed_file, chromosome):
@@ -110,32 +96,22 @@ def extract_accuracy_range(bed_file, chromosome):
 
     :param bed_file:
     :param chromosome: if None, all chromosomes are read
-    :return: an array containing tuples [(a,b),(b+1,c), (d,e) ...]
+    :return: the set of all high-confidence positions included in the bed file
     """
-    out = []
+    out = set()
     with open(bed_file, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         for row in reader:
-            if chromosome and row[0] == chromosome:
-                out.append((int(row[1]), int(row[2])))
-            elif not chromosome:
-                out.append((int(row[1]), int(row[2])))
+            if chromosome and row[0] == chromosome or not chromosome:
+                [out.add(x) for x in range(int(row[1]), int(row[2]) + 1)]
     return out
-
-
-def check_accuracy(position, ranges):
-    for r in ranges:
-        r0, r1 = r
-        if r0 <= int(position) <= r1:
-            return True
-    return False
 
 
 def check_percentage(base_count, snp_number, threshold):
     return (float(base_count) / snp_number) * 100 >= threshold
 
 
-def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_ranges=None):
+def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_ranges):
     """
     :param high_accuracy_ranges: if not None, SNPs position will be compared with all ranges.
     :param input_file: individual.stats - from get.var_stats.py script
@@ -146,7 +122,7 @@ def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_r
     """
     logging.debug('Started method classify_snp')
     start_time = time.time()
-    snp_total_number = get_file_length(input_file)
+    file_length = file_len(input_file)
 
     stats_file = open(input_file, 'r')
 
@@ -156,14 +132,14 @@ def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_r
     homozygous_accuracy = 0
     heterozygous_accuracy = 0
     out_file = open(out_dir + 'homozygous.pos', 'w')
-    for line in tqdm(stats_file, total=snp_total_number):
+
+    for line in tqdm(stats_file, total=file_length):
         if line.strip().startswith("#") or not line.strip():
             continue
 
         row = line.split(file_delimiter)
-
         homozygous_flag = False
-        snp_position = row[0]
+        snp_position = int(row[0])
         snp_ref = row[1]
         snp_alt = row[2]
         snp__a = float(row[3])
@@ -189,17 +165,19 @@ def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_r
 
             if homozygous_flag:
                 count_homo += 1
-                if high_accuracy_ranges and check_accuracy(snp_position, high_accuracy_ranges):
+                if high_accuracy_ranges and (snp_position in high_accuracy_ranges):
                     homozygous_accuracy += 1
                 out_file.write("{}\n".format(snp_position))
                 logging.debug("SNP {} is homozygous".format(snp_position))
             else:
                 count_het += 1
-                if high_accuracy_ranges and check_accuracy(snp_position, high_accuracy_ranges):
+                if high_accuracy_ranges and (snp_position in high_accuracy_ranges):
                     heterozygous_accuracy += 1
                 logging.debug("SNP {} is heterozygous".format(snp_position))
 
     stats_file.close()
+
+    snp_total_number = count_het + count_homo
 
     logging.info("Number or total SNPs: {} \n".format(snp_total_number))
     logging.info(
@@ -213,7 +191,7 @@ def classify_snp(input_file, file_delimiter, threshold, out_dir, high_accuracy_r
     if high_accuracy_ranges:
         logging.info(
             "Number of Heterozygous SNPs ( included in high accuracy Range): {}, {}% \n".format(
-                heterozygous_accuracy, (float(count_het) / snp_total_number) * 100))
+                heterozygous_accuracy, (float(heterozygous_accuracy) / count_het) * 100))
 
     logging.debug('Finished method classifySNP in: {} seconds'.format(
         time.time() - start_time))
