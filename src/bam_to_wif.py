@@ -38,7 +38,6 @@ def load_snps(alignment_file, variant_file, file_delimiter, chromosome, base_q=N
 
     valid = ['A', 'T', 'C', 'G']
 
-    x = 0
     for line in tqdm(var_file, total=total_variant_number, desc="Variant counter", miniters=1):
 
         splitted = line.split(file_delimiter)
