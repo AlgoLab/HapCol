@@ -15,7 +15,8 @@ class BalancedCombinations {
   BalancedCombinations();
 
   // initialize a generator
-  void initialize(const Counter n, const Counter k, BitColumn col, const double r);
+  void initialize(const Counter n, const Counter k,
+		  const BitColumn & col, const double r);
 
   bool has_next();
   void next();

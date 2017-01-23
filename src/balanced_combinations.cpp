@@ -8,16 +8,19 @@ BalancedCombinations::BalancedCombinations() : generator() {}
 
 
 void BalancedCombinations::initialize(const Counter n, const Counter k,
-				      BitColumn col, const double r) {
+				      const BitColumn & col, const double r) {
 
   n_ = n;
   k_ = k;
-  col_ = col;
   r_ = r;
+
+  col_.reset();
+  col_ |= col;
 
   c_ = (Counter)ceil(n_ * r_);
 
   // pi_0 and pi_1
+  p.clear();
   p.push_back(n_ - col_.count());
   p.push_back(col_.count());
 
@@ -65,6 +68,7 @@ void BalancedCombinations::get_combination(BitColumn & result) {
 
 void BalancedCombinations::build_mapping() {
 
+  map.clear();
   map.resize(2);
   for(i_ = 0; i_ < n_; ++i_) {
 
@@ -77,6 +81,8 @@ void BalancedCombinations::build_mapping() {
 
 
 void BalancedCombinations::initialize_arrays() {
+
+  c.clear();
 
   // c[0][.]
   a.clear();
