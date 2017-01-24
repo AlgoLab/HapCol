@@ -34,6 +34,15 @@ add_executable (hapcol
 
 install(TARGETS hapcol RUNTIME DESTINATION bin)
 
+add_executable (test_balancing
+  test_balancing.cpp
+  combinations.h
+  balanced_combinations.h
+  balanced_combinations.cpp
+  binomial.h
+  binomial.cpp
+)
+
 
 
 if(NOT DEFINED DEFAULT_ENABLE_DISPLAY_REVISION)
