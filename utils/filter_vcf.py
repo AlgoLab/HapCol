@@ -115,18 +115,18 @@ def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None, snps=None):
         useless_range = 0
 
         if chromosome and snps:
-            filename = out_dir + "chr{}_high_accuracy_filtered_{}.bed".format(chromosome, snps)
+            bed_filename = out_dir + "chr{}_high_accuracy_filtered_{}.bed".format(chromosome, snps)
         else:
-            filename = out_dir + "high_accuracy_filtered_{}.bed".format(chromosome)
+            bed_filename = out_dir + "high_accuracy_filtered_{}.bed".format(chromosome)
 
-        bed_out = open(filename, 'w')
+        bed_out = open(bed_filename, 'w')
 
         if chromosome and snps:
-            filename = out_dir + "chr{}_discarded_ranges_{}.bed".format(chromosome, snps)
+            bed_discarded_filename = out_dir + "chr{}_discarded_ranges_{}.bed".format(chromosome, snps)
         else:
-            filename = out_dir + "discarded_ranges_{}.bed".format(chromosome)
+            bed_discarded_filename = out_dir + "discarded_ranges_{}.bed".format(chromosome)
 
-        bed_discarded = open(filename, 'w')
+        bed_discarded = open(bed_discarded_filename, 'w')
 
         for i in tqdm(range_list, total=len(range_list), desc='Number of ranges'):
             vcf_in = VariantFile(vcf_file)
@@ -158,10 +158,14 @@ def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None, snps=None):
                 # remove the middle element from the range list
                 range_list.pop(middle)
             vcf_in.close()
+        bed_discarded.close()
         bed_out.close()
 
         logging.info("Found {} SNPs".format(snps_found))
         logging.info("Number of ranges discarded {}".format(useless_range))
+        l = file_len(bed_filename)
+        c = count_positions(bed_filename)
+        logging.info("Number of founded ranges: {} - Number of positions: {}".format(l, c))
 
 
 def main():
