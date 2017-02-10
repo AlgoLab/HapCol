@@ -17,7 +17,7 @@ void BalancedCombinations::initialize(const Counter n, const Counter k,
   col_.reset();
   col_ |= col;
 
-  c_ = (Counter)floor(n_ * r_);
+  c_ = (Counter)ceil(n_ * r_);
 
   // pi_0 and pi_1
   p.clear();
