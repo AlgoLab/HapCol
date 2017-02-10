@@ -534,6 +534,9 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
   BitColumn cut_mask;
   BitColumn mask_qj;
 
+  unsigned long long int n_bipartitions;
+  unsigned long long int total_n_bipartitions = 0;
+
   //Base case for OPT
   OPT[OPT_pointer] = 0;
 
@@ -724,6 +727,8 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       //Enumerate all the combinations
 
       generator.initialize(cov_j - num_gaps, k_j[input_pointer], proj, options.ratio);
+
+      n_bipartitions = 0;
       while(generator.has_next())
         {
           generator.next();
@@ -921,9 +926,12 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
             TRACE("-->> OPT: " << OPT[OPT_pointer]);
             //}
             ++comb_gaps_int;
+	    ++n_bipartitions;
           } while (comb_gaps_int < (unsigned int)(1 << num_gaps));
-        }
+	}
 
+      INFO("STEP " << step << " : " << n_bipartitions);
+      total_n_bipartitions += n_bipartitions;
       if (step_global % 500 == 0) {
         INFO(".:: Step: " << step_global << "  ==>  OPT: " << OPT[OPT_pointer] + OPT_global);
       } else {
@@ -931,7 +939,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       }
       //End of DP cycle for all the columns
     }
-
+  INFO("TOTAL: " << total_n_bipartitions);
 
   if(solution_existence) {
     DEBUG("*** SUCCESS ***");
