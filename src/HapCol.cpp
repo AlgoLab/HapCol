@@ -118,6 +118,7 @@ void intersect(const Column &colQ, const Column &colJ, const Pointer &q,
                vector<BitColumn> &pos_gaps, vector<Counter> &num_gaps, const bool &q_is_back);
 void represent_column(const Column &column, BitColumn &result, Counter &cov,
                       BitColumn &gaps_mask, Counter &num_gaps);
+Counter count_zeros(const BitColumn & col, const BitColumn & mask_out, const unsigned int & cov);
 void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &cov,
                const BitColumn &comb_gaps, const BitColumn &comb_no_gaps);
 unsigned int compute_index_of(const BitColumn &mask, const unsigned int &cov, const unsigned int &num_gaps,
@@ -215,9 +216,15 @@ int main(int argc, char** argv)
   vector<vector<char> > haplotype_blocks1;
   vector<vector<char> > haplotype_blocks2;
 
+  INFO("HEAD:\t" << "global" << "\t" << "step" << "\t"
+       << "cov" << "\t" << "non_gaps" << "\t"
+       << "zeros" << "\t" << "ones" << "\t" << "gaps"
+       << "\t" << "bip_non_gaps" << "\t" << "bip_gaps"
+       << "\t" << "total");
+
   while(blockreader.has_next()) {
     Block block = blockreader.get_block();
-    DEBUG("BLOCK: "<< counter_block);
+    INFO("BLOCK: "<< counter_block);
 
     ColumnReader1 columnreader_jump(block, !options.all_heterozygous);
 
@@ -618,7 +625,6 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
   DEBUG("-->> Basic case completed  -- current_cost: " << current_cost);
 
-
   //DP
 
   //For all the columns
@@ -769,15 +775,28 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       //Enumerate all the combinations
 
+      Counter zeros = count_zeros(colj, gaps_mask, cov_j);
+      Counter ones = cov_j - num_gaps - zeros;
+
+      LongCounter count_bip_non_gaps = 0;
+      LongCounter count_bip_gaps = 0;
+      LongCounter total_bip = 0;
+
       generator.initialize_cumulative(cov_j - num_gaps, k_j[input_pointer]);
       while(generator.has_next())
         {
+	  count_bip_non_gaps++;
+
           generator.next();
           generator.get_combination(comb_no_gaps);
           TRACE("Combination of not gaps: " << column_to_string(comb_no_gaps, cov_j - num_gaps));
 
           Counter comb_gaps_int = 0;
+	  count_bip_gaps = 0;
           do {
+	    count_bip_gaps++;
+	    total_bip++;
+
             BitColumn comb_gaps(comb_gaps_int);
 
             TRACE("Combination of gaps: " << column_to_string(comb_gaps, num_gaps));
@@ -969,6 +988,12 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
             ++comb_gaps_int;
           } while (comb_gaps_int < (unsigned int)(1 << num_gaps));
         }
+
+      INFO("STEP:\t" << step_global << "\t" << step << "\t"
+	   << cov_j << "\t" << (cov_j - num_gaps) << "\t" 
+	   << zeros << "\t" << ones << "\t" << num_gaps
+	   << "\t" << count_bip_non_gaps << "\t" << count_bip_gaps
+	   << "\t" << total_bip);
 
       if (step_global % 500 == 0) {
         INFO(".:: Step: " << step_global << "  ==>  OPT: " << OPT[OPT_pointer] + OPT_global);
@@ -1200,6 +1225,18 @@ void represent_column(const Column &column, BitColumn &result, Counter &cov,
   }
 }
 
+// count number of zeros (resp., ones) in non-gap rows for a column col
+Counter count_zeros(const BitColumn & col, const BitColumn & mask_out, const unsigned int & cov) {
+
+  Counter count = 0;
+  for(Counter i = 0; i < cov; ++i)
+
+    if(!mask_out[i])
+      if(!col[i])
+	++count;
+
+  return count;
+}
 
 void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &cov,
                const BitColumn &comb_gaps, const BitColumn &comb_no_gaps)
