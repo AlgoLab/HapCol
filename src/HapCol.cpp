@@ -217,7 +217,7 @@ int main(int argc, char** argv)
   vector<vector<char> > haplotype_blocks2;
 
   INFO("HEAD:\t" << "global" << "\t" << "step" << "\t"
-       << "cov" << "\t" << "non_gaps" << "\t"
+       << "cov" << "\t" << "k" << "\t" << "non_gaps" << "\t"
        << "zeros" << "\t" << "ones" << "\t" << "gaps"
        << "\t" << "bip_non_gaps" << "\t" << "bip_gaps"
        << "\t" << "total");
@@ -990,10 +990,10 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
         }
 
       INFO("STEP:\t" << step_global << "\t" << step << "\t"
-	   << cov_j << "\t" << (cov_j - num_gaps) << "\t" 
-	   << zeros << "\t" << ones << "\t" << num_gaps
-	   << "\t" << count_bip_non_gaps << "\t" << count_bip_gaps
-	   << "\t" << total_bip);
+	   << cov_j << "\t" << k_j[input_pointer] << "\t"
+	   << (cov_j - num_gaps) << "\t"  << zeros << "\t" << ones
+	   << "\t" << num_gaps << "\t" << count_bip_non_gaps
+	   << "\t" << count_bip_gaps << "\t" << total_bip);
 
       if (step_global % 500 == 0) {
         INFO(".:: Step: " << step_global << "  ==>  OPT: " << OPT[OPT_pointer] + OPT_global);
