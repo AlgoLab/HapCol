@@ -38,6 +38,7 @@
 #define MAX_CORRECTIONS 31
 
 typedef unsigned int Counter;
+typedef unsigned long long LongCounter;
 
 #define MAX_COUNTER std::numeric_limits<Counter>::max()
 
