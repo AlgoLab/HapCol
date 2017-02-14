@@ -6,6 +6,7 @@ import csv
 import logging
 import os
 import sys
+from enum import Enum
 
 from pysam import VariantFile
 from tqdm import tqdm
@@ -19,7 +20,30 @@ def prepare_loggers(log_level):
                         datefmt='%y%m%d %H:%M:%S')
 
 
-def count_positions(bed_file):
+class FileType(Enum):
+    BED = "bed"
+    VCF = "vcf"
+
+
+def filename_builder(prefix, chromosome, snp, file_type, out_dir):
+    out = out_dir + prefix
+    if chromosome:
+        out += "_chr{}".format(chromosome)
+    if snp:
+        out += "_snp{}".format(snp)
+    if file_type == FileType.BED:
+        out += ".{}".format(FileType.BED.value)
+    elif file_type == FileType.VCF:
+        out += ".{}".format(FileType.VCF.value)
+
+    return out
+
+
+def count_positions_in_ranges(bed_file):
+    """
+    :param bed_file: bed file containing high-confidence ranges
+    :return: count of all positions inside ranges
+    """
     out = 0
     with open(bed_file, 'r') as f:
         lines = f.readlines()
@@ -40,7 +64,6 @@ def file_len(fname):
 
 def extract_accuracy_range(bed_file, chromosome):
     """
-
     :param bed_file:
     :param chromosome: if None, all chromosomes are read
     :return: the set of all high-confidence positions included in the bed file
@@ -54,13 +77,12 @@ def extract_accuracy_range(bed_file, chromosome):
     return out
 
 
-def add_range(range_list, chromosome, idx):
-    out = set()
+def add_range(range_list, chromosome, idx, ranges_set):
     for i, el in enumerate(range_list):
         if idx and i == idx:
             if chromosome and el[0] == chromosome or not chromosome:
-                [out.add(x) for x in range(int(el[1]), int(el[2]) + 1)]
-    return out
+                [ranges_set.add(x) for x in range(int(el[1]), int(el[2]) + 1)]
+    return ranges_set
 
 
 def get_range(range_list, chromosome, idx):
@@ -70,14 +92,13 @@ def get_range(range_list, chromosome, idx):
                 return el[1], el[2]
 
 
-def file_to_list(file):
+def file_to_list(fname):
     """
-
-    :param file: a bed file containing Chromosome RangeStart RangeEnd
-    :return: a List representing the file's data as tuples [ (chr, start, end), (chr, start, end), ...]
+    :param fname: bed file containing Chromosome RangeStart RangeEnd
+    :return: list containing each file's row as tuple [ (Chromosome, RangeStart, RangeEnd), ...]
     """
     out = []
-    with open(file, 'r') as f:
+    with open(fname, 'r') as f:
         for line in f.readlines():
             row = line.split('\t')
             t = (row[0], int(row[1]), int(row[2]))
@@ -85,87 +106,103 @@ def file_to_list(file):
     return out
 
 
-def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None, snps=None):
-    vcf_in = VariantFile(vcf_file)  # auto-detect input format
-    if chromosome and snps:
-        filename = out_dir + "chr{}_high_accuracy_positions_{}.vcf".format(chromosome, snps)
-    elif chromosome:
-        filename = out_dir + "chr{}_high_accuracy_positions.vcf".format(chromosome)
-    elif snps:
-        filename = out_dir + "high_accuracy_positions_{}.vcf".format(snps)
-    else:
-        filename = out_dir + "high_accuracy_positions.vcf"
+def check_snv(ref, alts):
+    if ref and alts:
+        try:
+            alt = alts[0]
+            if len(ref) == len(alt) == 1:
+                return True
+        except Exception as e:
+            logging.error("Error during parsing alt from vcf:" + e)
+            return False
+    return False
 
-    vcf_out = VariantFile(filename, 'w', header=vcf_in.header)
 
-    if not snps:
-        # all high accuracy positions are inserted into a set
-        ranges = extract_accuracy_range(bed_file, chromosome)
-        # then, check for every SNP if it's included in one of the high accuracy range.
-        for row in vcf_in:
+def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None, snp_threshold=None, only_snps=True):
+    vcf_out_filename = filename_builder("high_accuracy_snp", chromosome, snp_threshold, FileType.VCF, out_dir)
+
+    vcf_header, vcf_length = extract_vcf_info(vcf_file)
+
+    if not snp_threshold:
+        vcf_in = VariantFile(vcf_file)  # auto-detect input format
+        vcf_out = VariantFile(vcf_out_filename, 'w', header=vcf_header)
+        # If no snp threshold is set, each position of bed file is read from the beginning.
+        # All high confidence positions are inserted into a set
+        ranges_set = extract_accuracy_range(bed_file, chromosome)
+        # then, check for every vcf row check if row.pos ( position) is in high accuracy range.
+        for row in tqdm(vcf_in, desc="Vcf rows", total=vcf_length):
             if chromosome and chromosome == row.chrom or not chromosome:
-                if row.pos in ranges:
-                    vcf_out.write(row)
+                if row.pos in ranges_set:
+                    if (only_snps and check_snv(row.ref, row.alts)) or not only_snps:
+                        vcf_out.write(row)
+        vcf_out.close()
+        vcf_in.close()
+
     else:
         snps_found = 0
 
-        # is easier to work on ranges list instead file lines
-        range_list = file_to_list(bed_file)
-        ranges_added = 0
-        useless_range = 0
+        ranges_list = file_to_list(bed_file)
+        ranges_set = set()
 
-        if chromosome and snps:
-            bed_filename = out_dir + "chr{}_high_accuracy_filtered_{}.bed".format(chromosome, snps)
-        else:
-            bed_filename = out_dir + "high_accuracy_filtered_{}.bed".format(chromosome)
+        vcf_out_filename = filename_builder("high_accuracy_snp", chromosome, snp_threshold, FileType.VCF, out_dir)
+        bed_filename = filename_builder("high_accuracy_ranges", chromosome, snp_threshold, FileType.BED, out_dir)
+        bed_discarded_filename = filename_builder("discarded_ranges", chromosome, snp_threshold, FileType.BED, out_dir)
 
         bed_out = open(bed_filename, 'w')
-
-        if chromosome and snps:
-            bed_discarded_filename = out_dir + "chr{}_discarded_ranges_{}.bed".format(chromosome, snps)
-        else:
-            bed_discarded_filename = out_dir + "discarded_ranges_{}.bed".format(chromosome)
-
         bed_discarded = open(bed_discarded_filename, 'w')
 
-        for i in tqdm(range_list, total=len(range_list), desc='Number of ranges'):
-            vcf_in = VariantFile(vcf_file)
+        vcf_out = VariantFile(vcf_out_filename, 'w', header=vcf_header)
+
+        for i in tqdm(ranges_list, total=len(ranges_list), desc='High accuracy ranges'):
+            vcf_in = VariantFile(vcf_file)  # auto-detect input format
             # the computation end if:
             # - number of snps found is greater than a threshold
             # - all ranges are read
-            if snps_found >= snps:
+            if snps_found >= snp_threshold:
                 break
 
             # start from the middle of the list
-            middle = len(range_list) // 2
-            if middle >= 0 and range_list:
+            middle_pos = len(ranges_list) // 2
+            if middle_pos >= 0 and ranges_list:
                 # add range one by one and check how many snps from vcf are included
-                ranges = add_range(range_list, chromosome, middle)
-                ranges_added += 1
+                ranges_set = add_range(ranges_list, chromosome, middle_pos, ranges_set)
 
                 for row in vcf_in:
                     if chromosome and chromosome == row.chrom or not chromosome:
-                        if row.pos in ranges:
-                            snps_found += 1
-                            vcf_out.write(row)
+                        if row.pos in ranges_set:
+                            if (only_snps and check_snv(row.ref, row.alts)) or not only_snps:
+                                snps_found += 1
+                                vcf_out.write(row)
 
-                a, b = get_range(range_list, chromosome, middle)
+                a, b = get_range(ranges_list, chromosome, middle_pos)
                 if snps_found == 0:
                     bed_discarded.write("{}\t{}\t{}\n".format(chromosome, a, b))
-                    useless_range += 1
                 else:
                     bed_out.write("{}\t{}\t{}\n".format(chromosome, a, b))
-                # remove the middle element from the range list
-                range_list.pop(middle)
+                # remove the middle_pos element from the range list
+                ranges_list.pop(middle_pos)
             vcf_in.close()
+
+        vcf_out.close()
         bed_discarded.close()
         bed_out.close()
 
         logging.info("Found {} SNPs".format(snps_found))
-        logging.info("Number of ranges discarded {}".format(useless_range))
+        d = file_len(bed_discarded_filename)
+        logging.info("Number of ranges discarded {}".format(d))
         l = file_len(bed_filename)
-        c = count_positions(bed_filename)
+        c = count_positions_in_ranges(bed_filename)
         logging.info("Number of founded ranges: {} - Number of positions: {}".format(l, c))
+
+
+def extract_vcf_info(vcf_file):
+    vcf_in = VariantFile(vcf_file)
+    vcf_header = vcf_in.header
+    cnt = 0
+    for entry in vcf_in:
+        cnt += 1
+    vcf_in.close()
+    return vcf_header, cnt
 
 
 def main():
@@ -178,6 +215,7 @@ def main():
                                                                       'chromosomes')
     parser.add_argument('-n', action='store', dest='number_of_snps',
                         help='Limit the number of snps to insert in the vcf. Default= all snps are retrieved', type=int)
+    parser.add_argument('-s', action='store_true', dest='only_snp', help='Only SNPs. Default True', default=True)
     parser.add_argument('-o', action='store', dest='outputDir',
                         help='Output (root) directory. Default: current directory')
     parser.add_argument('-v', help='increase output verbosity', dest='verbosity', action='store_true')
@@ -210,9 +248,9 @@ def main():
         os.mkdir(out_dir)
 
     l = file_len(args.bed_file)
-    c = count_positions(args.bed_file)
+    c = count_positions_in_ranges(args.bed_file)
     logging.info("Number of total ranges: {} - Number of total positions: {}".format(l, c))
-    filter_vcf(args.input_file, args.bed_file, out_dir, args.chromosome, args.number_of_snps)
+    filter_vcf(args.input_file, args.bed_file, out_dir, args.chromosome, args.number_of_snps, args.only_snp)
     logging.info("Program Finished")
 
 
