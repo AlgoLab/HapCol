@@ -56,6 +56,7 @@ def count_positions_in_ranges(bed_file):
 
 
 def file_len(fname):
+    i = -1
     with open(fname) as f:
         for i, l in enumerate(f):
             pass
@@ -112,8 +113,8 @@ def check_snv(ref, alts):
             alt = alts[0]
             if len(ref) == len(alt) == 1:
                 return True
-        except Exception as e:
-            logging.error("Error during parsing alt from vcf:" + e)
+        except IndexError:
+            logging.exception("Alts tuple empty: {}".format(alts))
             return False
     return False
 
@@ -198,11 +199,11 @@ def filter_vcf(vcf_file, bed_file, out_dir, chromosome=None, snp_threshold=None,
 def extract_vcf_info(vcf_file):
     vcf_in = VariantFile(vcf_file)
     vcf_header = vcf_in.header
-    cnt = 0
-    for entry in vcf_in:
-        cnt += 1
+    vcf_rows = 0
+    for row in vcf_in:
+        vcf_rows += 1
     vcf_in.close()
-    return vcf_header, cnt
+    return vcf_header, vcf_rows
 
 
 def main():
