@@ -22,7 +22,7 @@ function build_variant {
     if [ ! -f "${1}"_chr"${2}".var ] && [ ! -f "${1}"_"${2}".var ]; then
       {
         if ! [ -z "${4}" ]; then
-          var=${4}
+          var="${4}"
         else
           var="./variants.vcf"
         fi
@@ -93,7 +93,7 @@ function build_var_stats {
 #
 function delete_data {
 
-    if [ "${SKIP}" ]; then
+    if [ "${2}" ]; then
     input="y"
     else
       echo "Do you want to clear bam, sfi and other chr data? [y/N]"
@@ -166,8 +166,12 @@ else
     echo skip = "false"
 fi
 echo vcf_file = "${VCFFILE}"
+echo
 
 ## MAIN ##
+
+echo "Pipeline started"
+echo
 
 individual_folder="${MAINFOLDER}${INDIVIDUAL}/"
 
@@ -181,6 +185,7 @@ for path in ${individual_folder}*; do
   dirname="$(basename "${path}")"
 
   echo "Entering folder ${dirname}"
+  echo
 
   if [ ${SKIP} ];then
      input="y"
@@ -195,6 +200,8 @@ for path in ${individual_folder}*; do
     sanity_check=0
 
     ## Download data ##
+    echo "Downloading data"
+    echo
 
     if [ ! -f "alignment.bam" ]; then
       filename='alignment.txt'
@@ -220,26 +227,26 @@ for path in ${individual_folder}*; do
       done < ${filename}
     fi
 
-    echo "Building variants"
+    echo "Step 1 - Extracting variants from vcf"
     echo
     if ! build_variant "${INDIVIDUAL}" "${CHROMOSOME}" "${SCRIPTFOLDER}" "${VCFFILE}"; then
-        echo "Variants builded for individual ${INDIVIDUAL} and chromosome ${CHROMOSOME}"
+        echo "Variants built"
         echo
         chromosome="$(build_variant)"
-        echo "Building sfi file"
+        echo "Step 2 - Building sfi file"
         echo
         if ! build_sfi "${INDIVIDUAL}" "${chromosome}" "${SCRIPTFOLDER}"; then
-            echo "Sfi file builded"
+            echo "Sfi file built"
             echo
-            echo "Building matrix and its transpose"
+            echo "Step 3 - Building matrix and its transpose"
             echo
             if ! build_matrix_transpose "${INDIVIDUAL}" "${chromosome}" "${SCRIPTFOLDER}"; then
-                echo "Matrix and transpose created"
+                echo "Matrix and transpose built"
                 echo
-                echo "Building variants statistics file"
+                echo "Step 4 - Building variants statistics file"
                 echo
                 if ! build_var_stats "${INDIVIDUAL}" "${SCRIPTFOLDER}"; then
-                    echo "Variants statistics file created. Now can delete all useless files"
+                    echo "Variants statistics file created. Now can be deleted all useless files."
                     echo
                     if ! delete_data "${INDIVIDUAL}" "${SKIP}"; then
                         echo "Computation finished for ${dirname}"
@@ -257,3 +264,6 @@ for path in ${individual_folder}*; do
     fi
   fi
 done
+
+echo "Pipeline finished"
+echo
