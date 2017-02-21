@@ -108,7 +108,7 @@ function delete_data {
 ###PARSER###
 
 if [ $# -eq 0 ]; then
-echo "Usage: $0 -i [individual] -m [main folder] -s [script folder] -c [chromosome] -y";
+echo "Usage: $0 -i [individual] -m [main folder] -s [script folder] -c [chromosome] -v [vcf file]";
 echo "";
 echo "[individual] = son/mother/father which data will be analyzed";
 echo "[main folder] = the root folder, where son, mother, father subfolders are created";
@@ -204,7 +204,7 @@ for path in ${individual_folder}*; do
 
     fi
 
-    if [ -z "${VCFFILE}" ] && [ ! -f "variants.vcf" ]; then
+    if [ -z "${VCFFILE// }" ] && [ ! -f "variants.vcf" ]; then
       filename='variants.txt'
       { while read -r url; do
             wget "${url}" -O "variants.vcf" ;
