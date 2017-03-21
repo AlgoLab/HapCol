@@ -1000,10 +1000,14 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       if(solution_existence) {
           re_run_k = false;
       } else {
-          DEBUG("--> Current k: " << k_j[input_pointer]);
-          k_j_inc = k_j_inc + log2(k_j_inc) + 1;
+	  int old_k = k_j[input_pointer];
+	  if(k_j_inc <= 0) {
+	      k_j_inc = 1;
+	  } else {
+	      k_j_inc = k_j_inc + log2(k_j_inc) + 1;
+	  }
           k_j[input_pointer] = floor(k_j_inc);
-          DEBUG("--> Increment k: " << k_j[input_pointer]);
+          INFO("STEP " << step_global << " INCREMENT k from " << old_k << " to " << k_j[input_pointer]);
           input_pointer = prev(input_pointer, input.size(), 1);
           prevision_pointer = prev(prevision_pointer, prevision.size(), 1);
           OPT_pointer = prev(OPT_pointer, OPT.size(), 1);
