@@ -70,9 +70,9 @@ Pointer prev(const Pointer &indexer_pointer, const int &total_size, const int &s
 }
 
 static inline
-bool check_end(ColumnReader1 &column_reader, const vector<Column> &input, const Pointer &pointer)
+bool check_end(ColumnReader1 &column_reader, const vector<Column> &input, const Pointer &pointer, const bool &re_run)
 {
-  return (!column_reader.has_next() && (input[pointer][0].get_read_id() == -1));
+  return (!re_run && (!column_reader.has_next() && (input[pointer][0].get_read_id() == -1)));
 }
 
 static inline
@@ -453,14 +453,16 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
   vector<vector<vector<bool> > > backtrace_table2_new_block(num_col);
 
   for(unsigned int j = 0; j < num_col; j++) {
-    backtrace_table1[j].resize(scheme_backtrace[j].size());
-    backtrace_table2_haplotypes[j].resize(scheme_backtrace[j].size());
-    backtrace_table2_new_block[j].resize(scheme_backtrace[j].size());
-    for(unsigned int q = 0; q < backtrace_table1[j].size(); q++) {
-      backtrace_table1[j][q].resize(scheme_backtrace[j][q]);
-      backtrace_table2_haplotypes[j][q].resize(scheme_backtrace[j][q]);
-      backtrace_table2_new_block[j][q].resize(scheme_backtrace[j][q]);
-    }
+      backtrace_table1[j].resize(scheme_backtrace[j].size());
+      DEBUG("j: " << j << " scheme[j] size: " << scheme_backtrace[j].size());
+      backtrace_table2_haplotypes[j].resize(scheme_backtrace[j].size());
+      backtrace_table2_new_block[j].resize(scheme_backtrace[j].size());
+      for(unsigned int q = 0; q < backtrace_table1[j].size(); q++) {
+          backtrace_table1[j][q].resize(scheme_backtrace[j][q]);
+          DEBUG("j: " << j << " q: " << q << " scheme[j] size: " << scheme_backtrace[j][q]);
+          backtrace_table2_haplotypes[j][q].resize(scheme_backtrace[j][q]);
+          backtrace_table2_new_block[j][q].resize(scheme_backtrace[j][q]);
+      }
   }
   TRACE("-->> Backtrace table allocated");
 
@@ -567,6 +569,9 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
     }
   } while (has_successive);
 
+  // INC-K
+  double k_j_inc = k_j[input_pointer];
+  bool re_run_k = false;
 
   DEBUG("-->> Basic case completed  -- current_cost: " << current_cost);
 
@@ -575,7 +580,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
   //For all the columns
 
-  while(!check_end(column_reader, input, next(input_pointer, input.size(), 1)) && solution_existence)
+  while(!check_end(column_reader, input, next(input_pointer, input.size(), 1), re_run_k))// INC-K && solution_existence)
     {
       current_best = Cost::INFTY;
       solution_existence = false;
@@ -587,11 +592,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       step_global++;
       DEBUG("STARTING STEP:  " << step);
 
-      // >>>>>>>>>>>>>>>>>>>>>> UPDATE DATA STRUCTURE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-      //.:: Read Column
-      column = column_reader.get_next();
-
+      // >>>>>>>>>>>>>>>>>>>>>> UPDATE DATA STRUCTURE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       //.:: Update input
 
       //.:: Update common pointer
@@ -599,8 +600,15 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       Pointer new_input_pointer = next(input_pointer, input.size(), MAX_L - 1);
 
-      insert_col_and_update(input, k_j, homo_cost, homo_weight, new_input_pointer,
-                            column, options, homo_haplotypes, step + (MAX_L - 1));
+      // INC-K
+      if(!re_run_k) {
+          //.:: Read Column
+          column = column_reader.get_next();
+
+          insert_col_and_update(input, k_j, homo_cost, homo_weight, new_input_pointer,
+                                column, options, homo_haplotypes, step + (MAX_L - 1));
+          k_j_inc = k_j[input_pointer];
+      }
 
       //.:: Update indexers
 
@@ -675,6 +683,18 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
           //   //combinations = binom_coeff::cumulative_binomial_coefficient(common_gaps, common_gaps);
           //   combinations = 1 << common_gaps;
           // }
+
+            // INC-K
+            if(re_run_k && prevision[new_prevision_pointer][i].size() < combinations) {
+                DEBUG("Resize new_prevision_pointer[" << new_prevision_pointer << "][" << i << "] to " << combinations);
+                prevision[new_prevision_pointer][i].resize(combinations);
+            }
+            if(re_run_k && backtrace_table1[step][i].size() < combinations) {
+                DEBUG("Resize backtrace tables[" << step << "][" << i << "] to " << combinations);
+                backtrace_table1[step][i].resize(combinations);
+                backtrace_table2_haplotypes[step][i].resize(combinations);
+                backtrace_table2_new_block[step][i].resize(combinations);
+            }
 
           fill(prevision[new_prevision_pointer][i].begin(),
                (prevision[new_prevision_pointer][i].begin() + combinations),
@@ -887,12 +907,11 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
                 Pointer new_prevision_pointer = next(prevision_pointer, prevision.size(), p);
                 Cost& temp = prevision[new_prevision_pointer][p][index];
                 if(current_cost < temp) {
-                  temp = current_cost;
-
-                  backtrace_table1[step][p][index].jump = temp_jump;
-                  backtrace_table1[step][p][index].index = temp_index;
-                  backtrace_table2_haplotypes[step][p][index] = temp_haplotypes;
-                  backtrace_table2_new_block[step][p][index] = temp_new_block;
+                    temp = current_cost;
+                    backtrace_table1[step][p][index].jump = temp_jump;
+                    backtrace_table1[step][p][index].index = temp_index;
+                    backtrace_table2_haplotypes[step][p][index] = temp_haplotypes;
+                    backtrace_table2_new_block[step][p][index] = temp_new_block;
                 }
                 TRACE("USCITO:  ");
                 p++;
@@ -930,6 +949,26 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
         DEBUG(".:: Step: " << step_global << "  ==>  OPT: " << OPT[OPT_pointer]);
       }
       //End of DP cycle for all the columns
+
+      // INC-K
+      if(solution_existence) {
+          re_run_k = false;
+      } else {
+	  int old_k = k_j[input_pointer];
+	  if(k_j_inc <= 0) {
+	      k_j_inc = 1;
+	  } else {
+	      k_j_inc = k_j_inc + log2(k_j_inc) + 1;
+	  }
+          k_j[input_pointer] = floor(k_j_inc);
+          INFO("STEP " << step_global << " INCREMENT k from " << old_k << " to " << k_j[input_pointer]);
+          input_pointer = prev(input_pointer, input.size(), 1);
+          prevision_pointer = prev(prevision_pointer, prevision.size(), 1);
+          OPT_pointer = prev(OPT_pointer, OPT.size(), 1);
+          step--;
+          step_global--;
+          re_run_k = true;
+      }
     }
 
 
