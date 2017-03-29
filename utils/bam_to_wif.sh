@@ -57,4 +57,4 @@ echo chromosome = "${CHROMOSOME}"
 ## MAIN ##
 
 get_variants ${PREFIX} ${VCFFILE}
-bam_to_wif ${BAMFILE} ${PREFIX}_${CHROMOSOME} ${CHROMOSOME}
+bam_to_wif ${BAMFILE} ${PREFIX}_${CHROMOSOME}.var ${CHROMOSOME}
