@@ -55,3 +55,35 @@ binom_coeff::initialize_binomial_coefficients(const unsigned int n,
     }
   }
 }
+
+
+unsigned int binom_coeff::indexof(std::bitset<MAX_COVERAGE> comb) {
+
+  int k = 0;
+  int c_k = 0;
+  int temp = 0;
+  int result = 0;
+
+  while(comb.any()) {
+    temp = ffsl(comb.to_ulong());
+    c_k += temp;
+    k++;
+    result += binom_coeff::binomial_coefficient(c_k - 1, k);
+    comb >>= (temp);
+  }
+
+  return result;
+}
+
+
+unsigned int binom_coeff::cumulative_indexof(std::bitset<MAX_COVERAGE> comb, const unsigned int n_elements) {
+
+  unsigned int k = comb.count();
+  unsigned int result = indexof(comb);
+
+  for(unsigned int i = 0; i < k; i++) {
+    result += binom_coeff::binomial_coefficient(n_elements, i);
+  }
+
+  return result;
+}

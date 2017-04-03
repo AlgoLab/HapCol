@@ -28,6 +28,10 @@
 #define BINOMIAL_H
 
 #include <vector>
+#include <bitset>
+#include <string.h>
+
+#include "basic_types.h"
 
 class binom_coeff {
 
@@ -50,6 +54,12 @@ class binom_coeff {
     cumulative_binomial_coefficient(const unsigned int n, const unsigned int k) {
     return ctable[n][k];
   }
+
+  // index of comb in the binomial coefficients
+  static unsigned int indexof(std::bitset<MAX_COVERAGE> comb);
+
+  // index of comb in the cumulative binomial coeffients
+  static unsigned int cumulative_indexof(std::bitset<MAX_COVERAGE> comb, const unsigned int n_elements);
 
 };
 
