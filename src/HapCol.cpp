@@ -120,6 +120,7 @@ void represent_column(const Column &column, BitColumn &result, Counter &cov,
                       BitColumn &gaps_mask, Counter &num_gaps);
 void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &cov,
                const BitColumn &comb_gaps, const BitColumn &comb_no_gaps);
+void project(BitColumn & projection, const BitColumn & col, const BitColumn & mask_out, const unsigned int & cov);
 unsigned int compute_index_of(const BitColumn &mask, const unsigned int &cov, const unsigned int &num_gaps,
                               const BitColumn &pos_gaps);
 void cut(const BitColumn &in_col, BitColumn &cut_mask, const vector<Pointer> &indexer, Counter &active_pj);
@@ -566,6 +567,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
   BitColumn colj;
   BitColumn gaps_mask;
+  BitColumn proj;
   BitColumn mask;
   BitColumn comb_no_gaps;
   BitColumn comb_gaps;
@@ -764,9 +766,11 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       //Binary repesentation of the column and compute of coverage
       represent_column(input[input_pointer], colj, cov_j, gaps_mask, num_gaps);
+      project(proj, colj, gaps_mask, cov_j);
 
       DEBUG("...| Column: " <<  column_to_string(colj, cov_j) << " -- current coverage: " << cov_j << " and current k: " << k_j[input_pointer]);
       DEBUG("...| #of gaps: " << num_gaps << "  and their positions: " << column_to_string(gaps_mask, cov_j));
+      DEBUG("...| Column with gaps removed: " << column_to_string(proj, cov_j - num_gaps));
 
       //Initializing OPT[j] = infinite
       //XXX: Is it redundant??
@@ -1255,6 +1259,28 @@ void make_mask(BitColumn &mask, const BitColumn &mask_gaps, const unsigned int &
       mask.set(i, comb_gaps[i_gaps++]);
     } else {
       mask.set(i, comb_no_gaps[i_no_gaps++]);
+    }
+  }
+}
+
+
+/*
+  given some column col, i.e., 1010, project out those positions in
+  mask_out, i.e., 0110, resulting in projection 10 (note that coverage
+  cov is 4 here)
+
+  somewhat the inverse of 'make_mask' above
+*/
+void project(BitColumn & projection, const BitColumn & col, const BitColumn & mask_out, const unsigned int & cov) {
+
+  projection.reset();
+  unsigned int j = 0;
+
+  for(unsigned int i = 0; i < cov; ++i) {
+
+    if(!mask_out[i]) {
+      projection.set(j, col[i]);
+      ++j;
     }
   }
 }
