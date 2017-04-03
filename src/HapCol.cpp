@@ -38,6 +38,7 @@
 #include "basic_types.h"
 #include "binomial.h"
 #include "combinations.h"
+#include "balanced_combinations.h"
 #include "new_columnreader.h"
 #include "blockreader.h"
 
@@ -530,6 +531,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
   //INITIALIZATION
 
   Combinations generator;
+  BalancedCombinations balanced_generator;
   column_reader.restart();
   Counter step = 0;
   Column column;
@@ -794,11 +796,27 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       //Enumerate all the combinations
 
-      generator.initialize_cumulative(cov_j - num_gaps, k_j[input_pointer]);
-      while(generator.has_next())
+      bool loop_var;
+      if(options.balance_ratio > 0.0) {
+	balanced_generator.initialize(cov_j - num_gaps, k_j[input_pointer], proj, options.balance_ratio);
+	loop_var = balanced_generator.has_next();
+      }
+      else {
+	generator.initialize_cumulative(cov_j - num_gaps, k_j[input_pointer]);
+	loop_var = generator.has_next();
+      }
+
+      while(loop_var)
         {
-          generator.next();
-          generator.get_combination(comb_no_gaps);
+	  if(options.balance_ratio > 0.0) {
+	    balanced_generator.next();
+	    balanced_generator.get_combination(comb_no_gaps);
+	  }
+	  else {
+	    generator.next();
+	    generator.get_combination(comb_no_gaps);
+	  }
+
           TRACE("Combination of not gaps: " << column_to_string(comb_no_gaps, cov_j - num_gaps));
 
           Counter comb_gaps_int = 0;
@@ -992,6 +1010,13 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
             //}
             ++comb_gaps_int;
           } while (comb_gaps_int < (unsigned int)(1 << num_gaps));
+
+	  if(options.balance_ratio > 0.0) {
+	    loop_var = balanced_generator.has_next();
+	  }
+	  else {
+	    loop_var = generator.has_next();
+	  }
         }
 
       if (step_global % 500 == 0) {
