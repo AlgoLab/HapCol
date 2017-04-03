@@ -187,6 +187,7 @@ int main(int argc, char** argv)
   INFO("Input as unique block? " << (options.unique?"True":"False"));
   INFO("Error rate: " << options.error_rate);
   INFO("Alpha: " << options.alpha);
+  INFO("Balancing? " << (options.balancing?"True":"False"));
   INFO("Balance ratio: " << options.balance_ratio);
 
   if (!options.options_initialized) {
@@ -797,7 +798,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       //Enumerate all the combinations
 
       bool loop_var;
-      if(options.balance_ratio > 0.0) {
+      if(options.balancing) {
 	balanced_generator.initialize(cov_j - num_gaps, k_j[input_pointer], proj, options.balance_ratio);
 	loop_var = balanced_generator.has_next();
       }
@@ -808,7 +809,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       while(loop_var)
         {
-	  if(options.balance_ratio > 0.0) {
+	  if(options.balancing) {
 	    balanced_generator.next();
 	    balanced_generator.get_combination(comb_no_gaps);
 	  }
@@ -1011,7 +1012,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
             ++comb_gaps_int;
           } while (comb_gaps_int < (unsigned int)(1 << num_gaps));
 
-	  if(options.balance_ratio > 0.0) {
+	  if(options.balancing) {
 	    loop_var = balanced_generator.has_next();
 	  }
 	  else {

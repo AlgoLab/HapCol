@@ -181,6 +181,7 @@ options_t parse_arguments(int argc, char** argv) {
 	ret.alpha = atof(optarg);
 	break;
       case 'b' :
+	ret.balancing = true;
 	ret.balance_ratio = atof(optarg);
 	break;
       default :
@@ -210,9 +211,9 @@ options_t parse_arguments(int argc, char** argv) {
     sane = false;
     err = "balance ratio must be a value between 0.0 and 0.5";
   }
-  if((ret.balance_ratio > 0.0) && (ret.all_heterozygous == false)) {
+  if((ret.balancing == true) && (ret.all_heterozygous == false)) {
     sane = false;
-    err = "the option '--all-heterozygous' is required when balance ratio is > 0";
+    err = "the option '--all-heterozygous' is required when balancing";
   }
 
   if(!sane) {

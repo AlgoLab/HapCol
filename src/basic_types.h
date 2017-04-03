@@ -75,6 +75,7 @@ struct options_t {
   bool unique;
   double error_rate;
   double alpha;
+  bool balancing;
   double balance_ratio;
 
   options_t()
@@ -87,6 +88,7 @@ struct options_t {
     unique(false),
     error_rate(0.05),
     alpha(0.01),
+    balancing(false),
     balance_ratio(0.0)
   {}
 
