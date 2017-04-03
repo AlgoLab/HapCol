@@ -114,7 +114,11 @@ options_t parse_arguments(int argc, char** argv) {
 
     << "  -a [ --alpha ] arg (="
     << ret.alpha << ")" << std::string(2,'\t')
-    << "significance (smaller is better)" << std::endl;
+    << "significance (smaller is better)" << std::endl
+
+    << "  -b [ --balance-ratio ] (="
+    << ret.balance_ratio << ")" << std::string(2,'\t')
+    << "balance ratio (larger is stricter)" << std::endl;
 
   std::string opts_desc = oss.str();
 
@@ -135,12 +139,13 @@ options_t parse_arguments(int argc, char** argv) {
       {"unique", no_argument, 0, 'U'},
       {"error-rate", required_argument, 0, 'e'},
       {"alpha", required_argument, 0, 'a'},
+      {"balance_ratio", required_argument, 0, 'b'},
       {0, 0, 0, 0}
     };
 
     // get an option
     int option_index = 0;
-    opt = getopt_long(argc, argv, "hi:o:uxAUe:a:", long_options, &option_index);
+    opt = getopt_long(argc, argv, "hi:o:uxAUe:a:b:", long_options, &option_index);
 
     if(opt == -1) // end of options
       break;
@@ -175,6 +180,9 @@ options_t parse_arguments(int argc, char** argv) {
       case 'a' :
 	ret.alpha = atof(optarg);
 	break;
+      case 'b' :
+	ret.balance_ratio = atof(optarg);
+	break;
       default :
 	sane = false;
 	err = "unrecognized option";
@@ -197,6 +205,14 @@ options_t parse_arguments(int argc, char** argv) {
   if((ret.alpha < 0.0) || (ret.alpha > 1.0)) {
     sane = false;
     err = "alpha must be a value between 0.0 and 1.0";
+  }
+  if((ret.balance_ratio < 0.0) || (ret.balance_ratio > 0.5)) {
+    sane = false;
+    err = "balance ratio must be a value between 0.0 and 0.5";
+  }
+  if((ret.balance_ratio > 0.0) && (ret.all_heterozygous == false)) {
+    sane = false;
+    err = "the option '--all-heterozygous' is required when balance ratio is > 0";
   }
 
   if(!sane) {

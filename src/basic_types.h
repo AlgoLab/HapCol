@@ -75,6 +75,7 @@ struct options_t {
   bool unique;
   double error_rate;
   double alpha;
+  double balance_ratio;
 
   options_t()
   : options_initialized(false),
@@ -85,7 +86,8 @@ struct options_t {
     all_heterozygous(false),
     unique(false),
     error_rate(0.05),
-    alpha(0.01)
+    alpha(0.01),
+    balance_ratio(0.0)
   {}
 
 };
