@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 #endif
   INFO("Starting...");
 
-  Counter threshold_coverage = 30;
+  //Counter threshold_coverage = 30;
 
   const constants_t constants;
 
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
   Counter counter_block = 0;
   Counter counter_columns = 0;
   Counter counter_inhomo = 0;
-  BlockReader blockreader(options.input_filename, threshold_coverage, options.unweighted, options.unique);
+  BlockReader blockreader(options.input_filename, MAX_COVERAGE, options.unweighted, options.unique);
 
   Counter MAX_COV = 0;
   Counter MAX_L = 0;
@@ -416,7 +416,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
 
   DEBUG(">> Initialized starting parameters");
-  DEBUG("::== Starting parameters:  MAX_COV = " << MAX_COV << " // MAX_L = " << MAX_L << " // MAX_K = " << MAX_K << " // MAX_GAPS = " << MAX_GAPS);
+  INFO("::== Starting parameters:  MAX_COV = " << MAX_COV << " // MAX_L = " << MAX_L << " // MAX_K = " << MAX_K << " // MAX_GAPS = " << MAX_GAPS);
   DEBUG("::== no of columns:     " << num_col);
   //DEBUG("-->> sum_successive_L:  " << sum_successive_L);
 

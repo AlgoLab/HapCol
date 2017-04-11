@@ -34,8 +34,8 @@
 
 #include "entry.h"
 
-#define MAX_COVERAGE 32
-#define MAX_CORRECTIONS 31
+#define MAX_COVERAGE 64
+#define MAX_CORRECTIONS 63
 
 typedef unsigned int Counter;
 
