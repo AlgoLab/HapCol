@@ -743,7 +743,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
                 DEBUG("Resize new_prevision_pointer[" << new_prevision_pointer << "][" << i << "] to " << combinations);
                 prevision[new_prevision_pointer][i].resize(combinations);
             }
-            if(re_run_k && backtrace_table1[step][i].size() < combinations) {
+	    if(re_run_k && i < backtrace_table1[step].size() && backtrace_table1[step][i].size() < combinations) {
                 DEBUG("Resize backtrace tables[" << step << "][" << i << "] to " << combinations);
                 backtrace_table1[step][i].resize(combinations);
                 backtrace_table2_haplotypes[step][i].resize(combinations);
