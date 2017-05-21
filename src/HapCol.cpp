@@ -188,6 +188,7 @@ int main(int argc, char** argv)
   INFO("Error rate: " << options.error_rate);
   INFO("Alpha: " << options.alpha);
   INFO("Balancing? " << (options.balancing?"True":"False"));
+  INFO("Balancing activates after coverage: " << options.balance_cov);
   INFO("Balance ratio: " << options.balance_ratio);
 
   if (!options.options_initialized) {
@@ -798,7 +799,8 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
       //Enumerate all the combinations
 
       bool loop_var;
-      if(options.balancing) {
+      if(options.balancing and (cov_j > options.balance_cov)) {
+        INFO("STEP " << step_global << " column has coverage : " << cov_j << " -- balancing with ratio : " << options.balance_ratio);
 	balanced_generator.initialize(cov_j - num_gaps, k_j[input_pointer], proj, options.balance_ratio);
 	loop_var = balanced_generator.has_next();
       }
@@ -809,7 +811,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
 
       while(loop_var)
         {
-	  if(options.balancing) {
+	  if(options.balancing and (cov_j > options.balance_cov)) {
 	    balanced_generator.next();
 	    balanced_generator.get_combination(comb_no_gaps);
 	  }
@@ -1012,7 +1014,7 @@ void dp(const constants_t &constants, const options_t &options, ColumnReader1 &c
             ++comb_gaps_int;
           } while (comb_gaps_int < (unsigned int)(1 << num_gaps));
 
-	  if(options.balancing) {
+	  if(options.balancing and (cov_j > options.balance_cov)) {
 	    loop_var = balanced_generator.has_next();
 	  }
 	  else {

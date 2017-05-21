@@ -76,6 +76,7 @@ struct options_t {
   double error_rate;
   double alpha;
   bool balancing;
+  unsigned int balance_cov;
   double balance_ratio;
 
   options_t()
@@ -89,7 +90,8 @@ struct options_t {
     error_rate(0.05),
     alpha(0.01),
     balancing(false),
-    balance_ratio(0.0)
+    balance_cov(20),
+    balance_ratio(0.5)
   {}
 
 };
