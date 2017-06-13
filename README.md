@@ -15,8 +15,13 @@ Moreover, HapCol is able to process datasets composed of both long reads (over
 100 000bp long) and coverages up to 25x on standard workstations/small servers,
 whereas the other approaches cannot handle long reads or coverages greater than 20x.
 
+   1. [Reference](#ref)
+   2. [Compilation](#comp)
+   3. [Data](#data)
+   4. [License](#lic)
+   5. [Contacts](#cont)
 
-## Citation ##
+## <a name="ref"></a>Reference ##
 
 The detailed description of the algorithm, along with an experimental comparison
 with other state-of-the-art haplotype assembly tools, is presented in:
@@ -29,7 +34,7 @@ Bioinformatics.
 [doi:10.1093/bioinformatics/btv495](http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btv495?ijkey=2dl7qCgbFQ9eHFj)
 
 
-## Compilation ##
+## <a name="comp"></a>Compilation ##
 
 HapCol is distributed only on source form.
 It has been developed and tested on Ubuntu Linux but should work on (or should
@@ -56,7 +61,7 @@ We suggest to build HapCol out-of-tree with the following commands:
 
 The resulting file `hapcol` is the standalone executable program.
 
-## Basic usage ##
+## <a name="bus"></a>Basic usage ##
 
 The execution of HapCol requires to specify at least two parameters:
 
@@ -92,7 +97,7 @@ which should save a solution of cost 62 in the weighted case (or cost 7 in
 the unweighted case, if flag `-u` is added) in file `haplotypes.txt`.
 
 
-## Data ##
+## <a name="data"></a>Data ##
 
 The repository contains in the folde `data` some of the main simulated datasets and the real dataset that have been used in (Pirola, Zaccaria et al., Bioinformatics, 2016).
 
@@ -131,14 +136,14 @@ The simulated datasets are located in `data/simulated`. Each simulated dataset h
 
 where the parameters in the name have the following meaning:
 
-PARAMETER|
----------|-------------------------------
-$C       | The corresponding chromosome that is either 1 or 15
-$A       | The substitution-error rate that is either 5 (%) or 1 (%)
-$L       | The length of the original simulated reads (5000, 10000, 50000)
-$V       | The original coverage of the simulated reads that is always 30 in these datasets
-$S       | The random seeds used to randomly select a subset of the reads by downsampling
-$H       | The maximum coverage of the current dataset
+| PARAMETER | Description                                                                      |
+|-----------|----------------------------------------------------------------------------------|
+| $C        | The corresponding chromosome that is either 1 or 15                              |
+| $A        | The substitution-error rate that is either 5 (%) or 1 (%)                        |
+| $L        | The length of the original simulated reads (5000, 10000, 50000)                  |
+| $V        | The original coverage of the simulated reads that is always 30 in these datasets |
+| $S        | The random seeds used to randomly select a subset of the reads by downsampling   |
+| $H        | The maximum coverage of the current dataset                                      |
 
 Moreover the datasets are subdivided into two folders:
 
@@ -159,12 +164,12 @@ Last, `haplotypes-duitama` contains the phase of the corresponding SNPs: For eac
 
 
 
-## License ##
+## <a name="lic"></a>License ##
 
 HapCol is licensed under the terms of the GNU GPL v2.0
 
 
-## Contacts ##
+## <a name="cont"></a>Contacts ##
 
 For questions or support, please contact <simone.zaccaria@disco.unimib.it>
 or <yuri.pirola@disco.unimib.it>
