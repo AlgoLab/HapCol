@@ -94,7 +94,7 @@ the unweighted case, if flag `-u` is added) in file `haplotypes.txt`.
 
 ## Data ##
 
-The repository contains in the folde `data` all the simulated and real dataset that have been used in (Pirola, Zaccaria et al., Bioinformatics, 2016).
+The repository contains in the folde `data` some of the main simulated datasets and the real dataset that have been used in (Pirola, Zaccaria et al., Bioinformatics, 2016).
 
 ### Input format ###
 
@@ -135,7 +135,7 @@ PARAMETER|
 ---------|-------------------------------
 $C       | The corresponding chromosome that is either 1 or 15
 $A       | The substitution-error rate that is either 5 (%) or 1 (%)
-$L       | The length of the original simulated reads (1000, 5000, 10000, 50000, 100000, 200000)
+$L       | The length of the original simulated reads (5000, 10000, 50000)
 $V       | The original coverage of the simulated reads that is always 30 in these datasets
 $S       | The random seeds used to randomly select a subset of the reads by downsampling
 $H       | The maximum coverage of the current dataset
