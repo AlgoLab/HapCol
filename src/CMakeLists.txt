@@ -30,7 +30,7 @@ add_executable (hapcol
   HapCol.cpp
 )
 
-
+include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(hapcol ${Boost_LIBRARIES})
 install(TARGETS hapcol RUNTIME DESTINATION bin)
 
