@@ -50,7 +50,6 @@ HapCol depends on:
 
 - CMake (>= 2.8)
 - GNU make
-- Boost program_options (tested with 1.48, previous versions should work)
 
 We suggest to build HapCol out-of-tree with the following commands:
 
